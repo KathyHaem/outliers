@@ -1,5 +1,6 @@
 """ Adapted from github.com/Sara-Rajaee/Multilingual-Isotropy"""
 import argparse
+import os
 from typing import List
 
 import numpy as np
@@ -16,24 +17,6 @@ from matplotlib.pyplot import figure
 import matplotlib.pyplot as plt
 import matplotlib.pyplot as plt
 import seaborn as sns
-
-
-# Loading mBERT
-# todo i want to use pytorch and automodel, would that somehow change the results??
-# casing = "bert-base-multilingual-uncased"
-# tokenizer_mBERT = BertTokenizer.from_pretrained(casing, do_lower_case=True, add_special_tokens=True)
-# config = BertConfig(casing, output_hidden_states=True)
-# mBERT = TFBertModel.from_pretrained(casing)
-# mBERT.trainable = False
-
-
-def load_model(model_name="bert-base-multilingual-uncased"):
-    config = AutoConfig(model_name, output_hidden_states=True)
-    tokenizer = AutoTokenizer.from_pretrained(model_name, do_lower_case=True,
-                                              add_special_tokens=True)  # todo do_lower_case=False for other models
-    model = AutoModel.from_pretrained(model_name)  # TFAutoModel.from_pretrained(model_name)
-    model.trainable = False
-    return config, tokenizer, model
 
 
 def text2rep(model, tokenizer, df, dimension=768):
@@ -115,7 +98,9 @@ def get_contributions(langs: List[str], base_dir, model_name):
 
 
 # Visualization
-def visualise(selected, lang, fig_dir, hidden_size=768):
+def visualise(lang, base_dir, model_name, fig_dir, hidden_size=768):
+    selected = np.load(f'{base_dir}/{model_name}/selected_{lang}.npy')
+    os.makedirs(os.path.dirname(fig_dir), exist_ok=True)
     plt.rcParams["figure.figsize"] = (30, 3)
     x = np.arange(hidden_size)
     st = np.std(selected) * 3
@@ -136,14 +121,36 @@ def visualise(selected, lang, fig_dir, hidden_size=768):
     plt.show()
 
 
+# Loading mBERT
+# todo i want to use pytorch and automodel, would that somehow change the results??
+# casing = "bert-base-multilingual-uncased"
+# tokenizer_mBERT = BertTokenizer.from_pretrained(casing, do_lower_case=True, add_special_tokens=True)
+# config = BertConfig(casing, output_hidden_states=True)
+# mBERT = TFBertModel.from_pretrained(casing)
+# mBERT.trainable = False
+
+def load_model(model_name="bert-base-multilingual-uncased"):
+    config = AutoConfig(model_name, output_hidden_states=True)
+    tokenizer = AutoTokenizer.from_pretrained(model_name, do_lower_case=True,
+                                              add_special_tokens=True)  # todo do_lower_case=False for other models
+    model = AutoModel.from_pretrained(model_name)  # TFAutoModel.from_pretrained(model_name)
+    model.trainable = False
+    return config, tokenizer, model
+
+
 def main():
     parser = argparse.ArgumentParser(description='Isotropy analysis, ref. Rajaee and Pilehvar 2022')
-    parser.add_argument('--model', type=str, help="model name")
+    parser.add_argument('--model', type=str, default="bert-base-multilingual-uncased", help="model name")
+    parser.add_argument('--do_lowercase', type=bool, default=True, help="whether to lowercase during tokenising")
+    parser.add_argument('--hidden_size', type=int, default=768, help="model hidden size")
     parser.add_argument('--layer', type=int, help="which model layer the embeddings are from")
     parser.add_argument('--base_dir', type=str, help="where to save/load representations for the analysis")
+    parser.add_argument('--fig_dir', type=str, help="where to save figures")
     # parser.add_argument('--overwrite', type=bool, default=False,
     #                    help="whether to redo extracting embeddings for which a file already exists")
+    args = parser.parse_args()
 
+    _, tokenizer, model = load_model(args.model)
 
     # Loading Wikipedia datasets
     df_su = pd.read_csv('/content/Sundanese.csv', sep=',')
@@ -156,4 +163,11 @@ def main():
     langs = ['su', 'sw', 'en', 'es', 'ar', 'tr']
     dfs = [df_su, df_sw, df_en, df_es, df_ar, df_tr]
 
+    for lang, df in zip(langs, dfs):
+        extract_reps_per_lang(model, tokenizer, df, lang, args.base_dir, args.model)
+        visualise(lang, args.base_dir, args.model, args.fig_dir, args.hidden_size)
+    get_contributions(langs, args.base_dir, args.model)
 
+
+if __name__ == "__main__":
+    main()
