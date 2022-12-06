@@ -22,10 +22,10 @@ except ValueError:
 
 def read_data(target):
     # read target lang data
-    with open(f'tatoeba-parallel/tatoeba.{target}-eng.{target}', 'r') as tgt:
+    with open(f'../../data/tatoeba-parallel/tatoeba.{target}-eng.{target}', 'r') as tgt:
         tgt_sents = tgt.read().split("\n")
     # read eng data
-    with open(f'tatoeba-parallel/tatoeba.{target}-eng.eng', 'r') as eng:
+    with open(f'../../data/tatoeba-parallel/tatoeba.{target}-eng.eng', 'r') as eng:
         eng_sents = eng.read().split("\n")
     return tgt_sents, eng_sents
 

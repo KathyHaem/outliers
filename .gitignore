@@ -1,7 +1,7 @@
 venv/
 .idea/
+data/
 from-alina/embs/
 from-alina/models/
 from-alina/graphics/
-from-alina/code/tatoeba-parallel/
 from-alina/code/google_colab/

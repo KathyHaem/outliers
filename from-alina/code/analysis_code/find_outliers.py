@@ -111,5 +111,4 @@ elif args.type == "language":
         plt.plot(x, y, '.')
         plt.title(f"{dim}")
         plt.savefig(dir, dpi=300, bbox_inches="tight")
-        plt.savefig(dir, bbox_inches="tight")
         plt.clf()
