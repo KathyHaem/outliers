@@ -7,3 +7,4 @@ tensorboardx
 sacremoses
 pythainlp==3.1.1
 jieba
+matplotlib

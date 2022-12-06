@@ -9,8 +9,7 @@ from torch.utils.data import DataLoader
 parser = argparse.ArgumentParser(description='Establish outlier dimensions.')
 parser.add_argument('--model', type=str, help="name of the model")
 parser.add_argument('--layer', type=int, help="which model layer to save embeddings are from")
-parser.add_argument('--type', type=str, help="to analyze per-model or per-language ('all' or 'language')")
-parser.add_argument('--device', type=str, help="which GPU/device to use")
+parser.add_argument('--device', type=str, default="0" help="which GPU/device to use")
 parser.add_argument('--batch_size', type=int, default=128, help='batch size for encoding')
 args = parser.parse_args()
 

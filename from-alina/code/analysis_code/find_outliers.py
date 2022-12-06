@@ -9,9 +9,9 @@ import numpy as np
 # b) Identify magnitude-wise outliers per each language (used in chapter 5) + generate visualizations
 
 parser = argparse.ArgumentParser(description='Establish outlier dimensions.')
-parser.add_argument('model', type=str, help="name of the model")
-parser.add_argument('layer', type=int, help="which model layer the embeddings are from")
-parser.add_argument('type', type=str, help="to analyze per-model or per-language ('all' or 'language')")
+parser.add_argument('--model', type=str, help="name of the model")
+parser.add_argument('--layer', type=int, help="which model layer the embeddings are from")
+parser.add_argument('--type', type=str, help="to analyze per-model or per-language ('all' or 'language')")
 args = parser.parse_args()
 
 langs = ['ara', 'heb', 'vie', 'ind', 'jav', 'tgl', 'eus', 'mal',
@@ -37,7 +37,7 @@ if args.type == "all":
     for lang in langs:
         print(f"Considering language {lang}.")
         TGT = lang
-        target_emb = torch.load(f'embs_layer_{args.layer}/{args.model}/{TGT}/{TGT}.pt')
+        target_emb = torch.load(f'../embs/{args.model}/{args.layer}/{TGT}/{TGT}.pt')
         if mean_sum_vec is None:
             mean_sum_vec = torch.mean(target_emb, axis=0)
         else:
@@ -67,7 +67,7 @@ elif args.type == "language":
     for lang in langs:
         print(f"Considering language {lang}.")
         TGT = lang
-        target_emb = torch.load(f'embs_layer_{args.layer}/{args.model}/{TGT}/{TGT}.pt')
+        target_emb = torch.load(f'../embs/{args.model}/{args.layer}/{TGT}/{TGT}.pt')
         mean_vec = torch.mean(target_emb, axis=0)
 
         mean = torch.mean(mean_vec)

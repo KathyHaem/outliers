@@ -5,9 +5,9 @@ import random
 import argparse
 
 parser = argparse.ArgumentParser(description='Analyze anisotropy behaviour.')
-parser.add_argument('model', type=str, help="name of the model to be analyzed (xlm-r, cca or mse)")
-parser.add_argument('layer', type=int, help="which model layer the embeddings are from")
-parser.add_argument('dim', type=int, nargs='?', default=-1, help="which dimension to zero out if any")
+parser.add_argument('--model', type=str, help="name of the model to be analyzed")
+parser.add_argument('--layer', type=int, help="which model layer the embeddings are from")
+parser.add_argument('--dim', type=int, nargs='*', default=-1, help="which dimension to zero out if any")
 
 args = parser.parse_args()
 
@@ -36,8 +36,8 @@ def main():
     for lang in langs:
         print(f"Current language: {lang}")
         TGT = lang
-        target_embs = torch.load(f'embs_layer_{args.layer}/{args.model}/{TGT}/{TGT}.pt')
-        eng_embs = torch.load(f'embs_layer_{args.layer}/{args.model}/{TGT}/eng.pt')
+        target_embs = torch.load(f'../embs/{args.model}/{args.layer}/{TGT}/{TGT}.pt')
+        eng_embs = torch.load(f'../embs/{args.model}/{args.layer}/{TGT}/eng.pt')
 
         # if some dimension should be zeroed out first
         if args.dim != -1:
