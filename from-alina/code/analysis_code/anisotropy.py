@@ -7,15 +7,36 @@ import argparse
 parser = argparse.ArgumentParser(description='Analyze anisotropy behaviour.')
 parser.add_argument('--model', type=str, help="name of the model to be analyzed")
 parser.add_argument('--layer', type=int, help="which model layer the embeddings are from")
+parser.add_argument('--dataset', type=str, default="tatoeba", help="use embeddings from this dataset (tatoeba, wiki)")
 parser.add_argument('--dim', type=int, nargs='*', default=-1, help="which dimension to zero out if any")
 
 args = parser.parse_args()
 
-langs = ['ara', 'heb', 'vie', 'ind', 'jav', 'tgl', 'eus', 'mal',
-         'tel', 'afr', 'nld', 'deu', 'ell', 'ben', 'hin', 'mar',
-         'urd', 'tam', 'fra', 'ita', 'por', 'spa', 'bul', 'rus',
-         'jpn', 'kat', 'kor', 'tha', 'swh', 'cmn', 'kaz', 'tur',
-         'est', 'fin', 'hun', 'pes']
+langs_tatoeba = ['ara', 'heb', 'vie', 'ind', 'jav', 'tgl', 'eus', 'mal',
+                 'tel', 'afr', 'nld', 'deu', 'ell', 'ben', 'hin', 'mar',
+                 'urd', 'tam', 'fra', 'ita', 'por', 'spa', 'bul', 'rus',
+                 'jpn', 'kat', 'kor', 'tha', 'swh', 'cmn', 'kaz', 'tur',
+                 'est', 'fin', 'hun', 'pes']
+
+langs_wiki = ['ara', 'eng', 'spa', 'sun', 'swh', 'tur']
+
+lang_dict = {'ar': 'ara', 'he': 'heb', 'vi': 'vie', 'in': 'ind',
+             'jv': 'jav', 'tl': 'tgl', 'eu': 'eus', 'ml': 'mal',
+             'te': 'tel', 'af': 'afr', 'nl': 'nld', 'de': 'deu',
+             'el': 'ell', 'bn': 'ben', 'hi': 'hin', 'mr': 'mar', 'ur': 'urd',
+             'ta': 'tam', 'fr': 'fra', 'it': 'ita', 'pt': 'por', 'es': 'spa',
+             'bg': 'bul', 'ru': 'rus', 'ja': 'jpn', 'ka': 'kat', 'ko': 'kor',
+             'th': 'tha', 'sw': 'swh', 'zh': 'cmn', 'kk': 'kaz', 'tr': 'tur',
+             'et': 'est', 'fi': 'fin', 'hu': 'hun', 'fa': 'pes', 'su': 'sun'}
+
+lang_dict_3_2 = dict((v, k) for k, v in lang_dict.items())
+
+if args.dataset == "tatoeba":
+    langs = langs_tatoeba
+elif args.dataset == "wiki":
+    langs = langs_wiki
+else:
+    raise ValueError("unknown dataset argument")
 
 
 def cos_contrib(emb1, emb2):
@@ -35,24 +56,40 @@ def main():
     avg_anisotropy = 0
     for lang in langs:
         print(f"Current language: {lang}")
-        TGT = lang
-        target_embs = torch.load(f'../embs/{args.model}/{args.layer}/{TGT}/{TGT}.pt')
-        eng_embs = torch.load(f'../embs/{args.model}/{args.layer}/{TGT}/eng.pt')
-
-        # if some dimension should be zeroed out first
-        if args.dim != -1:
-            target_embs = remove_dims(args.dim, target_embs)
-            eng_embs = remove_dims(args.dim, eng_embs)
-
-        num_sents = target_embs.shape[0]
-        # randomly sample embedding pairs
-        random_pairs = [random.sample(range(num_sents), 2) for _ in range(10000)]
-
         cos_contribs_by_layer = []
         layer_cosine_contribs = []
-        for pair in random_pairs:
-            emb1, emb2 = target_embs[pair[0]], eng_embs[pair[1]]
-            layer_cosine_contribs.append(cos_contrib(emb1, emb2))
+        if args.dataset == 'tatoeba':
+            target_embs = torch.load(f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/{lang}.pt')
+            eng_embs = torch.load(f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/eng.pt')
+
+            # if some dimension should be zeroed out first
+            if args.dim != -1:
+                target_embs = remove_dims(args.dim, target_embs)
+                eng_embs = remove_dims(args.dim, eng_embs)
+            num_sents = target_embs.shape[0]
+            # randomly sample embedding pairs
+            random_pairs = [random.sample(range(num_sents), 2) for _ in range(10000)]
+
+            for pair in random_pairs:
+                emb1, emb2 = target_embs[pair[0]], eng_embs[pair[1]]
+                layer_cosine_contribs.append(cos_contrib(emb1, emb2))
+
+        elif args.dataset == 'wiki':
+            target_embs = torch.load(f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/{lang}.pt')
+
+            # if some dimension should be zeroed out first
+            if args.dim != -1:
+                target_embs = remove_dims(args.dim, target_embs)
+
+            # randomly sample embedding pairs
+            num_sents = target_embs.shape[0]
+            random_pairs = [random.sample(range(num_sents), 2) for _ in range(10000)]
+
+            for pair in random_pairs:
+                if pair[0] == pair[1]:
+                    continue
+                emb1, emb2 = target_embs[pair[0]], target_embs[pair[1]]
+                layer_cosine_contribs.append(cos_contrib(emb1, emb2))
 
         layer_cosine_contribs = np.array(layer_cosine_contribs)
         # layer_cosine_sims = layer_cosine_contribs.sum(axis=1)

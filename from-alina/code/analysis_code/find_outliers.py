@@ -1,3 +1,4 @@
+import os
 from collections import defaultdict
 import torch
 import argparse
@@ -11,14 +12,19 @@ import numpy as np
 parser = argparse.ArgumentParser(description='Establish outlier dimensions.')
 parser.add_argument('--model', type=str, help="name of the model")
 parser.add_argument('--layer', type=int, help="which model layer the embeddings are from")
+parser.add_argument('--dataset', type=str, default="tatoeba", help="use embeddings from this dataset (tatoeba, wiki)")
+parser.add_argument('--stdevs', type=int, default=3,
+                    help="dimension must be this number of standard deviations from mean to meet outlier definition")
 parser.add_argument('--type', type=str, help="to analyze per-model or per-language ('all' or 'language')")
 args = parser.parse_args()
 
-langs = ['ara', 'heb', 'vie', 'ind', 'jav', 'tgl', 'eus', 'mal',
-         'tel', 'afr', 'nld', 'deu', 'ell', 'ben', 'hin', 'mar',
-         'urd', 'tam', 'fra', 'ita', 'por', 'spa', 'bul', 'rus',
-         'jpn', 'kat', 'kor', 'tha', 'swh', 'cmn', 'kaz', 'tur',
-         'est', 'fin', 'hun', 'pes']
+langs_tatoeba = ['ara', 'heb', 'vie', 'ind', 'jav', 'tgl', 'eus', 'mal',
+                 'tel', 'afr', 'nld', 'deu', 'ell', 'ben', 'hin', 'mar',
+                 'urd', 'tam', 'fra', 'ita', 'por', 'spa', 'bul', 'rus',
+                 'jpn', 'kat', 'kor', 'tha', 'swh', 'cmn', 'kaz', 'tur',
+                 'est', 'fin', 'hun', 'pes']
+
+langs_wiki = ['ara', 'eng', 'spa', 'sun', 'swh', 'tur']
 
 lang_dict = {'ar': 'ara', 'he': 'heb', 'vi': 'vie', 'in': 'ind',
              'jv': 'jav', 'tl': 'tgl', 'eu': 'eus', 'ml': 'mal',
@@ -27,17 +33,23 @@ lang_dict = {'ar': 'ara', 'he': 'heb', 'vi': 'vie', 'in': 'ind',
              'ta': 'tam', 'fr': 'fra', 'it': 'ita', 'pt': 'por', 'es': 'spa',
              'bg': 'bul', 'ru': 'rus', 'ja': 'jpn', 'ka': 'kat', 'ko': 'kor',
              'th': 'tha', 'sw': 'swh', 'zh': 'cmn', 'kk': 'kaz', 'tr': 'tur',
-             'et': 'est', 'fi': 'fin', 'hu': 'hun', 'fa': 'pes'}
+             'et': 'est', 'fi': 'fin', 'hu': 'hun', 'fa': 'pes', 'su': 'sun'}
 
 lang_dict_3_2 = dict((v, k) for k, v in lang_dict.items())
+
+if args.dataset == "tatoeba":
+    langs = langs_tatoeba
+elif args.dataset == "wiki":
+    langs = langs_wiki
+else:
+    raise ValueError("unknown dataset argument")
 
 # ANALYZE ONE AVG EMBEDDING OVER ALL LANGUAGES
 if args.type == "all":
     mean_sum_vec = None
     for lang in langs:
         print(f"Considering language {lang}.")
-        TGT = lang
-        target_emb = torch.load(f'../embs/{args.model}/{args.layer}/{TGT}/{TGT}.pt')
+        target_emb = torch.load(f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/{lang}.pt')
         if mean_sum_vec is None:
             mean_sum_vec = torch.mean(target_emb, axis=0)
         else:
@@ -50,7 +62,7 @@ if args.type == "all":
     counter = 0
     outliers = []
     for i in mean_vec_all_langs:
-        if abs(i) > mean + 3 * std_dev:
+        if abs(i) > mean + args.stdevs * std_dev:
             outliers.append(counter)
         counter += 1
 
@@ -66,8 +78,7 @@ elif args.type == "language":
 
     for lang in langs:
         print(f"Considering language {lang}.")
-        TGT = lang
-        target_emb = torch.load(f'../embs/{args.model}/{args.layer}/{TGT}/{TGT}.pt')
+        target_emb = torch.load(f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/{lang}.pt')
         mean_vec = torch.mean(target_emb, axis=0)
 
         mean = torch.mean(mean_vec)
@@ -76,7 +87,7 @@ elif args.type == "language":
         counter = 0
         outliers = []
         for i in mean_vec:
-            if abs(i) > mean + 3 * std_dev:
+            if abs(i) > mean + args.stdevs * std_dev:
                 outliers.append(counter)
             counter += 1
 
@@ -87,7 +98,8 @@ elif args.type == "language":
             print(f"Average value of {o}: {mean_vec[o]}")
 
     for dim in all_outliers:
-        dir = f'{dim}_per_lang.png'
+        fig_dir = f'../plots/{args.dataset}/{args.model}/{args.layer}/'
+        os.makedirs(os.path.dirname(fig_dir), exist_ok=True)
         langs_with_outlier_values = defaultdict()
         # outlier_values = []
         for l in lang_outliers:
@@ -110,5 +122,5 @@ elif args.type == "language":
 
         plt.plot(x, y, '.')
         plt.title(f"{dim}")
-        plt.savefig(dir, dpi=300, bbox_inches="tight")
+        plt.savefig(f'{fig_dir}/{dim}_per_lang.png', dpi=300, bbox_inches="tight")
         plt.clf()

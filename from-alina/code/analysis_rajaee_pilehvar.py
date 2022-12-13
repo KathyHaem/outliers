@@ -1,33 +1,36 @@
-""" Adapted from github.com/Sara-Rajaee/Multilingual-Isotropy"""
+""" Adapted from https://github.com/Sara-Rajaee/Multilingual-Isotropy
+and https://github.com/Sara-Rajaee/clusterbased_isotropy_enhancement/"""
+
 import argparse
+import math as mt
 import os
+import random
 from typing import List
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from transformers import AutoTokenizer, TFAutoModel, AutoModel, AutoConfig
-import tensorflow as tf
-import pickle
-import scipy as sc
-import math as mt
-from sklearn.metrics.pairwise import cosine_similarity
-import random
-from random import randint
-from matplotlib.pyplot import figure
-import matplotlib.pyplot as plt
-import matplotlib.pyplot as plt
 import seaborn as sns
+# import tensorflow as tf
+import torch
+from matplotlib.pyplot import figure
+from scipy import cluster as clst
+from sklearn.decomposition import PCA
+from sklearn.metrics.pairwise import cosine_similarity
+from transformers import AutoTokenizer, AutoModel, AutoConfig
 
 
-def text2rep(model, tokenizer, df, dimension=768):
+def text2rep(model, tokenizer, df):
     representation = []
-    for i in range(len(df)):
-
-        inputs = tokenizer.encode(df['Sentence'].iloc[i], add_special_tokens=False)
-        inputs = np.asarray(inputs, dtype='int32').reshape((1, -1))
-        output = model(inputs)[0]
-        for j in range(output.shape[1]):
-            representation.append(output[0][j])
+    with torch.no_grad():
+        for i in range(len(df)):
+            inputs = tokenizer(df['Sentence'].iloc[i], add_special_tokens=False, return_tensors='pt')
+            # not sure what the below does
+            # inputs = np.asarray(inputs, dtype='int32').reshape((1, -1))
+            # print(inputs)
+            output = model(**inputs)[0]
+            for j in range(output.shape[1]):
+                representation.append(output[0][j])
 
     return representation
 
@@ -79,14 +82,15 @@ def cosine_contribution(representation, n):
 def extract_reps_per_lang(model, tokenizer, df, lang, base_dir, model_name):
     rep = text2rep(model, tokenizer, df)
     rd = random.sample(range(0, len(rep)), 10000)
-    selected = [rep[idx] for idx in rd]  # todo isn't that the same as = rep[rd]?
-    np.save(f'{base_dir}/{model_name}/selected_{lang}.npy', np.asarray(selected))
+    selected = [np.asarray(rep[idx]) for idx in rd]  # todo isn't that the same as = rep[rd]?
+    os.makedirs(os.path.dirname(f'{base_dir}/{model_name}/'), exist_ok=True)
+    np.save(f'{base_dir}/{model_name}/selected_{lang}.npy', np.stack(selected))
 
 
 def get_contributions(langs: List[str], base_dir, model_name):
     model_contribution = []
     for lang in langs:
-        selected = np.load(f'{base_dir}/{model_name}/selected_{lang}.npy')
+        selected = np.load(f'{base_dir}/{model_name}/selected_{lang}.npy', allow_pickle=True)
         model_contribution.append(cosine_contribution(selected, 3))
         print(isotropy(selected))
     model_contribution = np.asarray(model_contribution)
@@ -99,10 +103,11 @@ def get_contributions(langs: List[str], base_dir, model_name):
 
 # Visualization
 def visualise(lang, base_dir, model_name, fig_dir, hidden_size=768):
-    selected = np.load(f'{base_dir}/{model_name}/selected_{lang}.npy')
-    os.makedirs(os.path.dirname(fig_dir), exist_ok=True)
+    selected = np.load(f'{base_dir}/{model_name}/selected_{lang}.npy', allow_pickle=True)
+    os.makedirs(os.path.dirname(f'{fig_dir}/{model_name}/'), exist_ok=True)
     plt.rcParams["figure.figsize"] = (30, 3)
     x = np.arange(hidden_size)
+    print(type(selected))
     st = np.std(selected) * 3
     m = np.mean(selected)
 
@@ -117,7 +122,7 @@ def visualise(lang, base_dir, model_name, fig_dir, hidden_size=768):
     plt.fill_between(x, m - st, m + st, alpha=0.5, facecolor=clrs[7])
 
     plt.title(f"{lang}")
-    plt.savefig(fig_dir, dpi=300, bbox_inches="tight")
+    plt.savefig(f'{fig_dir}/{model_name}/{lang}.png', dpi=300, bbox_inches="tight")
     plt.show()
 
 
@@ -130,12 +135,75 @@ def visualise(lang, base_dir, model_name, fig_dir, hidden_size=768):
 # mBERT.trainable = False
 
 def load_model(model_name="bert-base-multilingual-uncased"):
-    config = AutoConfig(model_name, output_hidden_states=True)
+    config = AutoConfig.from_pretrained(model_name, output_hidden_states=True)
     tokenizer = AutoTokenizer.from_pretrained(model_name, do_lower_case=True,
                                               add_special_tokens=True)  # todo do_lower_case=False for other models
     model = AutoModel.from_pretrained(model_name)  # TFAutoModel.from_pretrained(model_name)
     model.trainable = False
     return config, tokenizer, model
+
+
+def cluster_based(representations, n_cluster: int, n_pc: int, hidden_size: int = 768):
+    """ Improving Isotropy of input representations using cluster-based method
+
+        representations:
+            input representations numpy array(n_samples, n_dimension)
+        n_cluster:
+            the number of clusters
+        n_pc:
+            the number of directions to be discarded
+        hidden_size:
+            model hidden size
+
+        returns:
+            isotropic representations (n_samples, n_dimension)
+    todo test this
+    """
+
+    centroid, label = clst.vq.kmeans2(representations, n_cluster, minit='points', missing='warn', check_finite=True)
+    cluster_mean = []
+    for i in range(max(label) + 1):
+        summ = np.zeros([1, hidden_size])
+        for j in np.nonzero(label == i)[0]:
+            summ = np.add(summ, representations[j])
+        cluster_mean.append(summ / len(label[label == i]))
+
+    zero_mean_representation = []
+    for i in range(len(representations)):
+        zero_mean_representation.append((representations[i]) - cluster_mean[label[i]])
+
+    cluster_representations = {}
+    for i in range(n_cluster):
+        cluster_representations.update({i: {}})
+        for j in range(len(representations)):
+            if label[j] == i:
+                cluster_representations[i].update({j: zero_mean_representation[j]})
+
+    cluster_representations2 = []
+    for j in range(n_cluster):
+        cluster_representations2.append([])
+        for key, value in cluster_representations[j].items():
+            cluster_representations2[j].append(value)
+
+    cluster_representations2 = np.array(cluster_representations2)
+
+    model = PCA()
+    post_rep = np.zeros((representations.shape[0], representations.shape[1]))
+
+    for i in range(n_cluster):
+        model.fit(np.array(cluster_representations2[i]).reshape((-1, hidden_size)))
+        component = np.reshape(model.components_, (-1, hidden_size))
+
+        for index in cluster_representations[i]:
+            sum_vec = np.zeros((1, hidden_size))
+
+            for j in range(n_pc):
+                sum_vec = sum_vec + np.dot(cluster_representations[i][index],
+                                           np.transpose(component)[:, j].reshape((hidden_size, 1))) * component[j]
+
+            post_rep[index] = cluster_representations[i][index] - sum_vec
+
+    return post_rep
 
 
 def main():
@@ -153,12 +221,12 @@ def main():
     _, tokenizer, model = load_model(args.model)
 
     # Loading Wikipedia datasets
-    df_su = pd.read_csv('/content/Sundanese.csv', sep=',')
-    df_sw = pd.read_csv('/content/Swahili.csv', sep=',')
-    df_en = pd.read_csv('/content/English.csv', sep=',')
-    df_es = pd.read_csv('/content/Spanish.csv', sep=',')
-    df_ar = pd.read_csv('/content/Arabic.csv', sep=',')
-    df_tr = pd.read_csv('/content/Turkish.csv', sep=',')
+    df_su = pd.read_csv('../../data/Wikipedia/Sundanese.csv', sep=',')
+    df_sw = pd.read_csv('../../data/Wikipedia/Swahili.csv', sep=',')
+    df_en = pd.read_csv('../../data/Wikipedia/English.csv', sep=',')
+    df_es = pd.read_csv('../../data/Wikipedia/Spanish.csv', sep=',')
+    df_ar = pd.read_csv('../../data/Wikipedia/Arabic.csv', sep=',')
+    df_tr = pd.read_csv('../../data/Wikipedia/Turkish.csv', sep=',')
 
     langs = ['su', 'sw', 'en', 'es', 'ar', 'tr']
     dfs = [df_su, df_sw, df_en, df_es, df_ar, df_tr]
