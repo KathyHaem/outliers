@@ -1,10 +1,35 @@
 import numpy as np
 from scipy import cluster as clst
+from scipy.linalg import fractional_matrix_power
 from sklearn.decomposition import PCA
+
+
+def whitening(representations):
+    """ zca whitening transformation as best as i understand it
+
+    representations:
+        numpy (torch?) samples x hidden_size. afaict samples should be >> hidden_size
+
+     """
+
+    # step 1. mean centre
+    mu = np.mean(representations, axis=0)
+    representations = representations - mu
+    # step 2. covariance matrix
+    cov = np.cov(representations)
+    # step 3. eigenvalue decomposition
+    values, vectors = np.linalg.eig(cov)
+    values = np.diag(values)
+    # step 4. calculate W
+    vectors_power = fractional_matrix_power(vectors, -0.5)
+    W = values @ vectors_power @ values.T
+    # step 5. apply W
+    return W @ representations
 
 
 def cluster_based(representations, n_cluster: int, n_pc: int, hidden_size: int = 768):
     """ Improving Isotropy of input representations using cluster-based method
+        adapted from https://github.com/Sara-Rajaee/clusterbased_isotropy_enhancement/
 
         representations:
             input representations numpy array(n_samples, n_dimension)

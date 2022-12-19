@@ -1,5 +1,4 @@
-""" Adapted from https://github.com/Sara-Rajaee/Multilingual-Isotropy
-and https://github.com/Sara-Rajaee/clusterbased_isotropy_enhancement/"""
+""" Adapted from https://github.com/Sara-Rajaee/Multilingual-Isotropy"""
 
 import argparse
 import math as mt
