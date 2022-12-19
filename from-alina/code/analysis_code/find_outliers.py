@@ -12,7 +12,8 @@ import numpy as np
 parser = argparse.ArgumentParser(description='Establish outlier dimensions.')
 parser.add_argument('--model', type=str, help="name of the model")
 parser.add_argument('--layer', type=int, help="which model layer the embeddings are from")
-parser.add_argument('--dataset', type=str, default="tatoeba", help="use embeddings from this dataset (tatoeba, wiki)")
+parser.add_argument('--dataset', type=str, default="tatoeba", choices=["tatoeba", "wiki"],
+                    help="use embeddings from this dataset (tatoeba, wiki)")
 parser.add_argument('--stdevs', type=int, default=3,
                     help="dimension must be this number of standard deviations from mean to meet outlier definition")
 parser.add_argument('--type', type=str, help="to analyze per-model or per-language ('all' or 'language')")
@@ -28,7 +29,7 @@ langs_wiki = ['ara', 'eng', 'spa', 'sun', 'swh', 'tur']
 
 lang_dict = {'ar': 'ara', 'he': 'heb', 'vi': 'vie', 'in': 'ind',
              'jv': 'jav', 'tl': 'tgl', 'eu': 'eus', 'ml': 'mal',
-             'te': 'tel', 'af': 'afr', 'nl': 'nld', 'de': 'deu',
+             'te': 'tel', 'af': 'afr', 'nl': 'nld', 'de': 'deu', 'en': 'eng',
              'el': 'ell', 'bn': 'ben', 'hi': 'hin', 'mr': 'mar', 'ur': 'urd',
              'ta': 'tam', 'fr': 'fra', 'it': 'ita', 'pt': 'por', 'es': 'spa',
              'bg': 'bul', 'ru': 'rus', 'ja': 'jpn', 'ka': 'kat', 'ko': 'kor',

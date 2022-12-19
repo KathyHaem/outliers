@@ -7,7 +7,8 @@ import argparse
 parser = argparse.ArgumentParser(description='Analyze anisotropy behaviour.')
 parser.add_argument('--model', type=str, help="name of the model to be analyzed")
 parser.add_argument('--layer', type=int, help="which model layer the embeddings are from")
-parser.add_argument('--dataset', type=str, default="tatoeba", help="use embeddings from this dataset (tatoeba, wiki)")
+parser.add_argument('--dataset', type=str, default="tatoeba", choices=["tatoeba", "wiki"],
+                    help="use embeddings from this dataset (tatoeba, wiki)")
 parser.add_argument('--dim', type=int, nargs='*', default=-1, help="which dimension to zero out if any")
 
 args = parser.parse_args()
@@ -22,7 +23,7 @@ langs_wiki = ['ara', 'eng', 'spa', 'sun', 'swh', 'tur']
 
 lang_dict = {'ar': 'ara', 'he': 'heb', 'vi': 'vie', 'in': 'ind',
              'jv': 'jav', 'tl': 'tgl', 'eu': 'eus', 'ml': 'mal',
-             'te': 'tel', 'af': 'afr', 'nl': 'nld', 'de': 'deu',
+             'te': 'tel', 'af': 'afr', 'nl': 'nld', 'de': 'deu', 'en': 'eng',
              'el': 'ell', 'bn': 'ben', 'hi': 'hin', 'mr': 'mar', 'ur': 'urd',
              'ta': 'tam', 'fr': 'fra', 'it': 'ita', 'pt': 'por', 'es': 'spa',
              'bg': 'bul', 'ru': 'rus', 'ja': 'jpn', 'ka': 'kat', 'ko': 'kor',

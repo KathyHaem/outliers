@@ -79,12 +79,21 @@ def cosine_contribution(representation, n):
     return ary[np.argsort(ary)[-n:]]
 
 
-def extract_reps_per_lang(model, tokenizer, df, lang, base_dir, model_name):
+def extract_reps_per_lang(model, tokenizer, df, lang, args):
+    file_name = f'{args.base_dir}/{args.model_name}/cbie-{args.cbie}_selected_{lang}.npy'
+    if os.path.isfile(file_name) and not args.overwrite:
+        return
+
+    print(f"extracting {args.model} representations for {lang}")
     rep = text2rep(model, tokenizer, df)
     rd = random.sample(range(0, len(rep)), 10000)
-    selected = [np.asarray(rep[idx]) for idx in rd]  # todo isn't that the same as = rep[rd]?
-    os.makedirs(os.path.dirname(f'{base_dir}/{model_name}/'), exist_ok=True)
-    np.save(f'{base_dir}/{model_name}/selected_{lang}.npy', np.stack(selected))
+    selected = np.stack([np.asarray(rep[idx]) for idx in rd])  # todo isn't that the same as = rep[rd]?
+
+    if args.do_cbie:
+        selected = cluster_based(selected, args.n_cluster, args.n_pc, args.hidden_size)
+
+    os.makedirs(os.path.dirname(file_name), exist_ok=True)
+    np.save(file_name, selected)
 
 
 def get_contributions(langs: List[str], base_dir, model_name):
@@ -101,8 +110,7 @@ def get_contributions(langs: List[str], base_dir, model_name):
     t_file.close()
 
 
-# Visualization
-def visualise(lang, base_dir, model_name, fig_dir, hidden_size=768):
+def vis_outliers(lang, base_dir, model_name, fig_dir, hidden_size=768):
     selected = np.load(f'{base_dir}/{model_name}/selected_{lang}.npy', allow_pickle=True)
     os.makedirs(os.path.dirname(f'{fig_dir}/{model_name}/'), exist_ok=True)
     plt.rcParams["figure.figsize"] = (30, 3)
@@ -157,7 +165,6 @@ def cluster_based(representations, n_cluster: int, n_pc: int, hidden_size: int =
 
         returns:
             isotropic representations (n_samples, n_dimension)
-    todo test this
     """
 
     centroid, label = clst.vq.kmeans2(representations, n_cluster, minit='points', missing='warn', check_finite=True)
@@ -185,7 +192,8 @@ def cluster_based(representations, n_cluster: int, n_pc: int, hidden_size: int =
         for key, value in cluster_representations[j].items():
             cluster_representations2[j].append(value)
 
-    cluster_representations2 = np.array(cluster_representations2)
+    # probably unnecessary, gives you dtype object and a deprecation warning
+    # cluster_representations2 = np.array(cluster_representations2)
 
     model = PCA()
     post_rep = np.zeros((representations.shape[0], representations.shape[1]))
@@ -199,7 +207,7 @@ def cluster_based(representations, n_cluster: int, n_pc: int, hidden_size: int =
 
             for j in range(n_pc):
                 sum_vec = sum_vec + np.dot(cluster_representations[i][index],
-                                           np.transpose(component)[:, j].reshape((hidden_size, 1))) * component[j]
+                                           np.expand_dims(np.transpose(component)[:, j], 1)) * component[j]
 
             post_rep[index] = cluster_representations[i][index] - sum_vec
 
@@ -214,8 +222,12 @@ def main():
     parser.add_argument('--layer', type=int, help="which model layer the embeddings are from")
     parser.add_argument('--base_dir', type=str, help="where to save/load representations for the analysis")
     parser.add_argument('--fig_dir', type=str, help="where to save figures")
-    # parser.add_argument('--overwrite', type=bool, default=False,
-    #                    help="whether to redo extracting embeddings for which a file already exists")
+    parser.add_argument('--do_cbie', action='store_true', help="if True, apply cbie before analysis")
+    # defaults taken from R&P's paper, but not totally sure why those numbers
+    parser.add_argument('--n_cluster', type=int, default=27, help="if cbie, number of clusters to create")
+    parser.add_argument('--n_pc', type=int, default=12, help="if cbie, number of principal components to discard")
+    parser.add_argument('--overwrite', type=bool, default=False,
+                        help="whether to redo extracting embeddings for which a file already exists")
     args = parser.parse_args()
 
     _, tokenizer, model = load_model(args.model)
@@ -232,8 +244,8 @@ def main():
     dfs = [df_su, df_sw, df_en, df_es, df_ar, df_tr]
 
     for lang, df in zip(langs, dfs):
-        extract_reps_per_lang(model, tokenizer, df, lang, args.base_dir, args.model)
-        visualise(lang, args.base_dir, args.model, args.fig_dir, args.hidden_size)
+        extract_reps_per_lang(model, tokenizer, df, lang, args)
+        vis_outliers(lang, args.base_dir, args.model, args.fig_dir, args.hidden_size)
     get_contributions(langs, args.base_dir, args.model)
 
 

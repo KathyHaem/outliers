@@ -1,9 +1,7 @@
 """ turning the colab file into a script """
 import argparse
 import os
-import random
 
-import numpy as np
 import pandas as pd
 import torch
 from torch.utils.data import DataLoader
@@ -13,7 +11,8 @@ parser = argparse.ArgumentParser(description='Establish outlier dimensions.')
 parser.add_argument('--model', type=str, help="name of the model")
 parser.add_argument('--layer', type=int, help="which model layer to save embeddings are from")
 parser.add_argument('--device', type=str, default="0", help="which GPU/device to use")
-parser.add_argument('--dataset', type=str, default="tatoeba", help="which dataset to encode (tatoeba, wiki)")
+parser.add_argument('--dataset', type=str, default="tatoeba", choices=["tatoeba", "wiki"],
+                    help="which dataset to encode (tatoeba, wiki)")
 parser.add_argument('--batch_size', type=int, default=128, help='batch size for encoding')
 args = parser.parse_args()
 
@@ -112,4 +111,3 @@ elif args.dataset == 'wiki':
         os.makedirs(f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/', exist_ok=True)
         torch.save(rep, f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/{lang}.pt')
         print(f"Finished saving embeddings for {lang} in model {args.model}.")
-
