@@ -2,9 +2,10 @@ venv/
 venv36/
 .idea/
 data/
-from-alina/embs/
+embs/
 from-alina/models/
 from-alina/graphics/
 from-alina/code/google_colab/
 from-alina/plots/
+plots/
 *.pyc

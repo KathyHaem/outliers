@@ -1,3 +1,18 @@
+CONTENTS OF THIS CD
+
+- MA.pdf: PDF version of the thesis
+
+- /graphics: all associated graphics
+
+- /code: all used code (separate README in that folder)
+
+- /embs_layer_8: Tatoeba parallel sentence embeddings produced by the 8th layers of 
+XLM-R, X2S_CCA and X2S_MSE
+
+- /models: model checkpoints for X2S-CCA, X2S-MSE, XLM-R fine-tuned on PAWS-X and XLM-R fine-tuned on XNLI 
+
+- The Tatoeba dataset: can be found in: code/google_colab/MA/tatoeba-parallel
+
 %%%%%%%%%% CODE IN 'analysis_code' %%%%%%%%%%
 
 - anisotropy.py: performs anisotropy analysis (as done in chapter 6.2.1)
@@ -6,8 +21,8 @@
 
 - find_extended_outliers.py: used for establishing expanded set of outliers (as in chapter 6.1.1)
 
-- find_outliers.py: used to 
-	a) identify magnitude-wise outliers for an XLM-R layer (note: only layer 8 sentence embeddings are on this CD) 
+- find_outliers.py: used to
+	a) identify magnitude-wise outliers for an XLM-R layer (note: only layer 8 sentence embeddings are on this CD)
 	b) identify magnitude-wise outliers per each language (used in chapter 5) + generate visualizations (as in 5.1.1)
 
 - plots.py: generates all kinds of visualizations (for details see code itself)

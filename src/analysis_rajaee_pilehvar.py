@@ -234,12 +234,12 @@ def main():
     _, tokenizer, model = load_model(args.model)
 
     # Loading Wikipedia datasets
-    df_su = pd.read_csv('../../data/Wikipedia/Sundanese.csv', sep=',')
-    df_sw = pd.read_csv('../../data/Wikipedia/Swahili.csv', sep=',')
-    df_en = pd.read_csv('../../data/Wikipedia/English.csv', sep=',')
-    df_es = pd.read_csv('../../data/Wikipedia/Spanish.csv', sep=',')
-    df_ar = pd.read_csv('../../data/Wikipedia/Arabic.csv', sep=',')
-    df_tr = pd.read_csv('../../data/Wikipedia/Turkish.csv', sep=',')
+    df_su = pd.read_csv('../data/Wikipedia/Sundanese.csv', sep=',')
+    df_sw = pd.read_csv('../data/Wikipedia/Swahili.csv', sep=',')
+    df_en = pd.read_csv('../data/Wikipedia/English.csv', sep=',')
+    df_es = pd.read_csv('../data/Wikipedia/Spanish.csv', sep=',')
+    df_ar = pd.read_csv('../data/Wikipedia/Arabic.csv', sep=',')
+    df_tr = pd.read_csv('../data/Wikipedia/Turkish.csv', sep=',')
 
     langs = ['su', 'sw', 'en', 'es', 'ar', 'tr']
     dfs = [df_su, df_sw, df_en, df_es, df_ar, df_tr]
