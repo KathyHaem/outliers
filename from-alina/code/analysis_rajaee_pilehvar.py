@@ -167,25 +167,26 @@ def cluster_based(representations, n_cluster: int, n_pc: int, hidden_size: int =
             isotropic representations (n_samples, n_dimension)
     """
 
-    centroid, label = clst.vq.kmeans2(representations, n_cluster, minit='points', missing='warn', check_finite=True)
-    cluster_mean = []
-    for i in range(max(label) + 1):
+    centroids, labels = clst.vq.kmeans2(representations, n_cluster, minit='points', missing='warn', check_finite=True)
+    cluster_means = []
+    for i in range(max(labels) + 1):
         summ = np.zeros([1, hidden_size])
-        for j in np.nonzero(label == i)[0]:
+        for j in np.nonzero(labels == i)[0]:
             summ = np.add(summ, representations[j])
-        cluster_mean.append(summ / len(label[label == i]))
+        cluster_means.append(summ / len(labels[labels == i]))
 
-    zero_mean_representation = []
+    zero_mean_representations = []
     for i in range(len(representations)):
-        zero_mean_representation.append((representations[i]) - cluster_mean[label[i]])
+        zero_mean_representations.append((representations[i]) - cluster_means[labels[i]])
 
     cluster_representations = {}
     for i in range(n_cluster):
         cluster_representations.update({i: {}})
         for j in range(len(representations)):
-            if label[j] == i:
-                cluster_representations[i].update({j: zero_mean_representation[j]})
+            if labels[j] == i:
+                cluster_representations[i].update({j: zero_mean_representations[j]})
 
+    # ...why couldn't that have been done in one step?
     cluster_representations2 = []
     for j in range(n_cluster):
         cluster_representations2.append([])
