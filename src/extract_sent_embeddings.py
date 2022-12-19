@@ -7,6 +7,8 @@ import torch
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, AutoModel
 
+from constants import langs_tatoeba, langs_wiki
+
 parser = argparse.ArgumentParser(description='Establish outlier dimensions.')
 parser.add_argument('--model', type=str, help="name of the model")
 parser.add_argument('--layer', type=int, help="which model layer to save embeddings are from")
@@ -38,14 +40,6 @@ def mean_pooling(token_embeddings, attention_mask):
     input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
     return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
 
-
-langs_tatoeba = ['ara', 'heb', 'vie', 'ind', 'jav', 'tgl', 'eus', 'mal',
-                 'tel', 'afr', 'nld', 'deu', 'ell', 'ben', 'hin', 'mar',
-                 'urd', 'tam', 'fra', 'ita', 'por', 'spa', 'bul', 'rus',
-                 'jpn', 'kat', 'kor', 'tha', 'swh', 'cmn', 'kaz', 'tur',
-                 'est', 'fin', 'hun', 'pes']
-
-langs_wiki = ['ara', 'eng', 'spa', 'sun', 'swh', 'tur']
 
 if args.dataset == "tatoeba":
     langs = langs_tatoeba

@@ -19,7 +19,6 @@ args = parser.parse_args()
 
 model = AutoModel.from_pretrained(args.model)
 
-# TODO access the weights
 if args.type == "all":
     layer = model.encoder.layer[args.layer]
     bias = layer.output.LayerNorm.bias.data

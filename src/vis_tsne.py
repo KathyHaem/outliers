@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 
-from analysis_rajaee_pilehvar import cluster_based
+from post_processing import cluster_based
 
 
 def visualise_tsne(embs: np.ndarray, plot_file: str, title: str):

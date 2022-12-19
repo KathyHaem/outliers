@@ -5,6 +5,8 @@ import seaborn as sns
 import os
 import numpy as np
 
+from constants import langs_tatoeba, langs_wiki, lang_dict_3_2, lang_dict
+
 parser = argparse.ArgumentParser(description='Generate embedding visualizations.')
 parser.add_argument('--model', type=str, help="name of the model (xlm-r, x2s-cca or x2s-mse)")
 parser.add_argument('--layer', type=int, help="which model layer the embeddings are from")
@@ -17,25 +19,6 @@ parser.add_argument('--job', help="'heatmaps' or 'means' or 'outlier' or 'mean_e
 parser.add_argument('--language', type=str, nargs='?', default="",
                     help="if only a specific language should be considered")
 args = parser.parse_args()
-
-langs_tatoeba = ['ara', 'heb', 'vie', 'ind', 'jav', 'tgl', 'eus', 'mal',
-                 'tel', 'afr', 'nld', 'deu', 'ell', 'ben', 'hin', 'mar',
-                 'urd', 'tam', 'fra', 'ita', 'por', 'spa', 'bul', 'rus',
-                 'jpn', 'kat', 'kor', 'tha', 'swh', 'cmn', 'kaz', 'tur',
-                 'est', 'fin', 'hun', 'pes']
-
-langs_wiki = ['ara', 'eng', 'spa', 'sun', 'swh', 'tur']
-
-lang_dict = {'ar': 'ara', 'he': 'heb', 'vi': 'vie', 'in': 'ind',
-             'jv': 'jav', 'tl': 'tgl', 'eu': 'eus', 'ml': 'mal',
-             'te': 'tel', 'af': 'afr', 'nl': 'nld', 'de': 'deu', 'en': 'eng',
-             'el': 'ell', 'bn': 'ben', 'hi': 'hin', 'mr': 'mar', 'ur': 'urd',
-             'ta': 'tam', 'fr': 'fra', 'it': 'ita', 'pt': 'por', 'es': 'spa',
-             'bg': 'bul', 'ru': 'rus', 'ja': 'jpn', 'ka': 'kat', 'ko': 'kor',
-             'th': 'tha', 'sw': 'swh', 'zh': 'cmn', 'kk': 'kaz', 'tr': 'tur',
-             'et': 'est', 'fi': 'fin', 'hu': 'hun', 'fa': 'pes', 'su': 'sun'}
-
-lang_dict_3_2 = dict((v, k) for k, v in lang_dict.items())
 
 if args.dataset == "tatoeba":
     langs = langs_tatoeba

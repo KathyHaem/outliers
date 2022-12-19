@@ -5,6 +5,7 @@ from collections import defaultdict
 import operator
 
 # Code for checking parallel data cosines (and establishing similarity-harming group)
+from constants import langs_tatoeba
 
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('model', type=str, help="name of the model (xlm-r, x2s-cca or x2s-mse)")
@@ -15,11 +16,7 @@ parser.add_argument('language', type=str, nargs='?', default="",
                     help="if only a specific language should be considered")
 args = parser.parse_args()
 
-langs = ['ara', 'heb', 'vie', 'ind', 'jav', 'tgl', 'eus', 'mal',
-         'tel', 'afr', 'nld', 'deu', 'ell', 'ben', 'hin', 'mar',
-         'urd', 'tam', 'fra', 'ita', 'por', 'spa', 'bul', 'rus',
-         'jpn', 'kat', 'kor', 'tha', 'swh', 'cmn', 'kaz', 'tur',
-         'est', 'fin', 'hun', 'pes']
+langs = langs_tatoeba
 
 
 def calc_cosine(tgt, eng):

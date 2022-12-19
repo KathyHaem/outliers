@@ -5,16 +5,15 @@ from collections import defaultdict
 import numpy as np
 import matplotlib.pyplot as plt
 
+from constants import langs_tatoeba_2
+
 parser = argparse.ArgumentParser(description='Analyze prediction rankings and cosines.')
 parser.add_argument('model', type=str, help="name of the model to be analyzed (xlm-r, cca or mse)")
 parser.add_argument('dimension', type=int, help='dimension to analyze, e.g. 588')
 parser.add_argument('job', help="'spearman' or 'cosines")
 args = parser.parse_args()
 
-langs = ['ar', 'he', 'vi', 'id', 'jv', 'tl', 'eu', 'ml', 'te', 'af',
-         'nl', 'de', 'el', 'bn', 'hi', 'mr', 'ur', 'ta', 'fr', 'it',
-         'pt', 'es', 'bg', 'ru', 'ja', 'ka', 'ko', 'th', 'sw', 'zh',
-         'kk', 'tr', 'et', 'fi', 'hu', 'fa']
+langs = langs_tatoeba_2
 
 all_correlations = defaultdict(float)
 

@@ -3,18 +3,14 @@ import torch
 import argparse
 
 # Code used for establishing expanded set of outliers.
+from constants import langs_tatoeba
 
 parser = argparse.ArgumentParser(description='Find dimensions for additional tatoeba runs.')
 parser.add_argument('model', type=str, help="name of the model (xlm-r, x2s-cca or x2s-mse)")
 parser.add_argument('layer', type=int, help="which model layer the embeddings are from")
 args = parser.parse_args()
 
-langs = ['ara', 'heb', 'vie', 'ind', 'jav', 'tgl', 'eus', 'mal',
-         'tel', 'afr', 'nld', 'deu', 'ell', 'ben', 'hin', 'mar',
-         'urd', 'tam', 'fra', 'ita', 'por', 'spa', 'bul', 'rus',
-         'jpn', 'kat', 'kor', 'tha', 'swh', 'cmn', 'kaz', 'tur',
-         'est', 'fin', 'hun', 'pes']
-
+langs = langs_tatoeba
 farthest = defaultdict(float)
 
 for lang in langs:

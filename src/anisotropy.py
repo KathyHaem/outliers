@@ -4,6 +4,8 @@ import torch
 import random
 import argparse
 
+from constants import langs_tatoeba, langs_wiki
+
 parser = argparse.ArgumentParser(description='Analyze anisotropy behaviour.')
 parser.add_argument('--model', type=str, help="name of the model to be analyzed")
 parser.add_argument('--layer', type=int, help="which model layer the embeddings are from")
@@ -13,24 +15,6 @@ parser.add_argument('--dim', type=int, nargs='*', default=-1, help="which dimens
 
 args = parser.parse_args()
 
-langs_tatoeba = ['ara', 'heb', 'vie', 'ind', 'jav', 'tgl', 'eus', 'mal',
-                 'tel', 'afr', 'nld', 'deu', 'ell', 'ben', 'hin', 'mar',
-                 'urd', 'tam', 'fra', 'ita', 'por', 'spa', 'bul', 'rus',
-                 'jpn', 'kat', 'kor', 'tha', 'swh', 'cmn', 'kaz', 'tur',
-                 'est', 'fin', 'hun', 'pes']
-
-langs_wiki = ['ara', 'eng', 'spa', 'sun', 'swh', 'tur']
-
-lang_dict = {'ar': 'ara', 'he': 'heb', 'vi': 'vie', 'in': 'ind',
-             'jv': 'jav', 'tl': 'tgl', 'eu': 'eus', 'ml': 'mal',
-             'te': 'tel', 'af': 'afr', 'nl': 'nld', 'de': 'deu', 'en': 'eng',
-             'el': 'ell', 'bn': 'ben', 'hi': 'hin', 'mr': 'mar', 'ur': 'urd',
-             'ta': 'tam', 'fr': 'fra', 'it': 'ita', 'pt': 'por', 'es': 'spa',
-             'bg': 'bul', 'ru': 'rus', 'ja': 'jpn', 'ka': 'kat', 'ko': 'kor',
-             'th': 'tha', 'sw': 'swh', 'zh': 'cmn', 'kk': 'kaz', 'tr': 'tur',
-             'et': 'est', 'fi': 'fin', 'hu': 'hun', 'fa': 'pes', 'su': 'sun'}
-
-lang_dict_3_2 = dict((v, k) for k, v in lang_dict.items())
 
 if args.dataset == "tatoeba":
     langs = langs_tatoeba
