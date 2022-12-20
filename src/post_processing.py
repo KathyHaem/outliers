@@ -1,6 +1,5 @@
 import numpy as np
 from scipy import cluster as clst
-from scipy.linalg import fractional_matrix_power
 from sklearn.decomposition import PCA
 
 
@@ -19,10 +18,11 @@ def whitening(representations):
     cov = np.cov(representations)
     # step 3. eigenvalue decomposition
     values, vectors = np.linalg.eig(cov)
-    values = np.diag(values)
+    values = np.real(values)
+    vectors = np.real(vectors)
     # step 4. calculate W
-    vectors_power = fractional_matrix_power(vectors, -0.5)
-    W = values @ vectors_power @ values.T
+    epsilon = 1e-5
+    W = vectors @ np.diag(1.0 / np.sqrt(values + epsilon)) @ vectors.T  # [M x M]
     # step 5. apply W
     return W @ representations
 
@@ -90,5 +90,3 @@ def cluster_based(representations, n_cluster: int, n_pc: int, hidden_size: int =
             post_rep[index] = cluster_representations[i][index] - sum_vec
 
     return post_rep
-
-

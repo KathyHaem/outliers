@@ -8,7 +8,7 @@ from matplotlib import pyplot as plt
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 
-from post_processing import cluster_based
+from post_processing import cluster_based, whitening
 
 
 def visualise_tsne(embs: np.ndarray, plot_file: str, title: str):
@@ -57,12 +57,14 @@ def vis_tsne_parallel(embs: np.ndarray, parallel_embs: np.ndarray, plot_file: st
     plt.close(fig)
 
 
-def load_embs(emb_file, load, do_cbie):
+def load_embs(emb_file, load, do_cbie, do_whiten):
     if load == "torch":
         embs = torch.load(emb_file).numpy()
     elif load == "np":
         embs = np.load(emb_file, allow_pickle=True)
-    if do_cbie:
+    if do_whiten:
+        embs = whitening(embs)
+    if do_cbie:  # idk if it's meaningful to do both whitening and cbie, but IF we do both, probably this order
         embs = cluster_based(embs, n_cluster=7, n_pc=12, hidden_size=embs.shape[1])
     return embs
 
@@ -76,17 +78,20 @@ def main():
     parser.add_argument('--plot_file', type=str, help="where to save the plot")
     parser.add_argument('--load', type=str, choices=["torch", "np"], help="library to use for loading [torch, np]")
     parser.add_argument('--do_cbie', action='store_true', help='try doing cbie before')
+    parser.add_argument('--do_whiten', action='store_true', help='try doing whitening before')
     args = parser.parse_args()
 
-    embs = load_embs(args.emb_file, args.load, args.do_cbie)
+    embs = load_embs(args.emb_file, args.load, args.do_cbie, args.do_whiten)
 
     if args.parallel_emb_file and args.parallel_vis:
-        parallel_embs = load_embs(args.parallel_emb_file, args.load, args.do_cbie)
+        parallel_embs = load_embs(args.parallel_emb_file, args.load, args.do_cbie, args.do_whiten)
         vis_tsne_parallel(embs, parallel_embs, args.plot_file,
-                          f"t-SNE vis of {args.emb_file} and {args.parallel_emb_file}")
+                          f"t-SNE vis of {args.emb_file} and {args.parallel_emb_file}. "
+                          f"Whiten: {args.do_whiten} CBIE: {args.do_cbie}")
 
     else:
-        visualise_tsne(embs, args.plot_file, f"t-SNE vis of {args.emb_file}")
+        visualise_tsne(embs, args.plot_file, f"t-SNE vis of {args.emb_file}. "
+                                             f"Whiten: {args.do_whiten} CBIE: {args.do_cbie}")
 
 
 if __name__ == "__main__":
