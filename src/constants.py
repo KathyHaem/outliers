@@ -11,7 +11,7 @@ langs_tatoeba_2 = ['ar', 'he', 'vi', 'id', 'jv', 'tl', 'eu', 'ml', 'te', 'af',
 
 langs_wiki = ['ara', 'eng', 'spa', 'sun', 'swh', 'tur']
 
-lang_dict = {'ar': 'ara', 'he': 'heb', 'vi': 'vie', 'in': 'ind',
+lang_dict = {'ar': 'ara', 'he': 'heb', 'vi': 'vie', 'id': 'ind',
              'jv': 'jav', 'tl': 'tgl', 'eu': 'eus', 'ml': 'mal',
              'te': 'tel', 'af': 'afr', 'nl': 'nld', 'de': 'deu', 'en': 'eng',
              'el': 'ell', 'bn': 'ben', 'hi': 'hin', 'mr': 'mar', 'ur': 'urd',

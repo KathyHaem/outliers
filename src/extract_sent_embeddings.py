@@ -14,10 +14,10 @@ from post_processing import whitening, cluster_based
 def read_tatoeba_data(target):
     # read target lang data
     with open(f'../data/tatoeba-parallel/tatoeba.{target}-eng.{target}', 'r', encoding='utf-8') as tgt:
-        tgt_sents = tgt.read().split("\n")
+        tgt_sents = [line for line in tgt.read().split("\n") if line]
     # read eng data
     with open(f'../data/tatoeba-parallel/tatoeba.{target}-eng.eng', 'r', encoding='utf-8') as eng:
-        eng_sents = eng.read().split("\n")
+        eng_sents = [line for line in eng.read().split("\n") if line]
     return tgt_sents, eng_sents
 
 
@@ -91,10 +91,11 @@ def main(args):
                 torch.save(tgt_whitened, f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/{lang}_whitened.pt')
                 torch.save(eng_whitened, f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/eng_whitened.pt')
             if args.save_cbie:
-                tgt_cbie = torch.Tensor(
-                    cluster_based(tgt_embeddings.numpy(), n_cluster=7, n_pc=12, hidden_size=tgt_embeddings.shape[1]))
-                eng_cbie = torch.Tensor(
-                    cluster_based(eng_embeddings.numpy(), n_cluster=7, n_pc=12, hidden_size=eng_embeddings.shape[1]))
+                n_cluster = max(len(eng) // 300, 1) 
+                tgt_cbie = torch.Tensor(cluster_based(
+                    tgt_embeddings.numpy(), n_cluster=n_cluster, n_pc=12, hidden_size=tgt_embeddings.shape[1]))
+                eng_cbie = torch.Tensor(cluster_based(
+                    eng_embeddings.numpy(), n_cluster=n_cluster, n_pc=12, hidden_size=eng_embeddings.shape[1]))
                 torch.save(tgt_cbie, f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/{lang}_cbie.pt')
                 torch.save(eng_cbie, f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/eng_cbie.pt')
             print(f"Finished saving embeddings for {lang} in model {args.model}.")
@@ -114,10 +115,12 @@ def main(args):
             os.makedirs(f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/', exist_ok=True)
             torch.save(rep, f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/{lang}.pt')
             if args.save_whitened:
-                whitened = whitening(rep)
+                whitened = torch.Tensor(whitening(rep.numpy()))
                 torch.save(whitened, f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/{lang}_whitened.pt')
             if args.save_cbie:
-                cbie = cluster_based(rep, n_cluster=7, n_pc=12, hidden_size=rep.shape[1])
+                n_cluster = max(rep.shape[0] // 300, 1)
+                cbie = torch.Tensor(
+                    cluster_based(rep.numpy, n_cluster=n_cluster, n_pc=12, hidden_size=rep.shape[1]))
                 torch.save(cbie, f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/{lang}_cbie.pt')
             print(f"Finished saving embeddings for {lang} in model {args.model}.")
 

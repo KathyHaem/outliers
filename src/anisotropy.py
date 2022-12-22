@@ -30,7 +30,7 @@ def main(args):
 
     avg_anisotropy = 0
     for lang in langs:
-        print(f"Current language: {lang}")
+        # print(f"Current language: {lang}")
         cos_contribs_by_layer = []
         layer_cosine_contribs = []
         if args.dataset == 'tatoeba':

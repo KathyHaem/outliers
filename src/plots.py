@@ -153,7 +153,7 @@ def main(args):
     if args.job == "heatmaps":
         print("Generating heatmaps.")
         for lang in langs:
-            print(f"Current language: {lang}")
+            # print(f"Current language: {lang}")
             target_emb = torch.load(
                 f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/{lang}{args.append_file_name}.pt')
             eng_emb = None if args.dataset == "wiki" else torch.load(
@@ -163,7 +163,7 @@ def main(args):
     elif args.job == "means":
         print("Generating mean representations.")
         for lang in langs:
-            print(f"Current language: {lang}")
+            # print(f"Current language: {lang}")
             target_emb = torch.load(
                 f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/{lang}{args.append_file_name}.pt')
             eng_emb = None if args.dataset == "wiki" else torch.load(
@@ -181,7 +181,7 @@ def main(args):
             plot_outliers(args, target_emb, eng_emb, lang)
         else:
             for lang in langs:
-                print(f"Current language: {lang}")
+                # print(f"Current language: {lang}")
                 target_emb = torch.load(
                     f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/{lang}{args.append_file_name}.pt')
                 eng_emb = None if args.dataset == "wiki" else torch.load(
