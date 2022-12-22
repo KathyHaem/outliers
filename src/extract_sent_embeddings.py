@@ -7,7 +7,7 @@ import torch
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, AutoModel
 
-from constants import langs_tatoeba, langs_wiki
+from constants import langs_tatoeba, langs_wiki, lang_dict_3_2
 from post_processing import whitening, cluster_based
 
 
@@ -17,6 +17,16 @@ def read_tatoeba_data(target):
         tgt_sents = [line for line in tgt.read().split("\n") if line]
     # read eng data
     with open(f'../data/tatoeba-parallel/tatoeba.{target}-eng.eng', 'r', encoding='utf-8') as eng:
+        eng_sents = [line for line in eng.read().split("\n") if line]
+    return tgt_sents, eng_sents
+
+
+def read_tatoeba_data_task(target):
+    """ use the mixed-up order data needed for the tatoeba task """
+    target_2 = lang_dict_3_2[target]
+    with open(f'../data/tatoeba/{target_2}-en.{target_2}', 'r', encoding='utf-8') as tgt:
+        tgt_sents = [line for line in tgt.read().split("\n") if line]
+    with open(f'../data/tatoeba/{target_2}-en.en', 'r', encoding='utf-8') as eng:
         eng_sents = [line for line in eng.read().split("\n") if line]
     return tgt_sents, eng_sents
 
@@ -80,7 +90,10 @@ def main(args):
             print(f"Currently processing {lang}...")
             os.makedirs(f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}', exist_ok=True)
 
-            tgt, eng = read_tatoeba_data(lang)
+            if args.tatoeba_use_task_order:
+                tgt, eng = read_tatoeba_data_task(lang)
+            else:
+                tgt, eng = read_tatoeba_data(lang)
             tgt_embeddings = get_embeds(tgt, model, tokenizer, args, device)
             eng_embeddings = get_embeds(eng, model, tokenizer, args, device)
             torch.save(tgt_embeddings, f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/{lang}.pt')
@@ -91,7 +104,7 @@ def main(args):
                 torch.save(tgt_whitened, f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/{lang}_whitened.pt')
                 torch.save(eng_whitened, f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/eng_whitened.pt')
             if args.save_cbie:
-                n_cluster = max(len(eng) // 300, 1) 
+                n_cluster = max(len(eng) // 300, 1)
                 tgt_cbie = torch.Tensor(cluster_based(
                     tgt_embeddings.numpy(), n_cluster=n_cluster, n_pc=12, hidden_size=tgt_embeddings.shape[1]))
                 eng_cbie = torch.Tensor(cluster_based(
@@ -120,7 +133,7 @@ def main(args):
             if args.save_cbie:
                 n_cluster = max(rep.shape[0] // 300, 1)
                 cbie = torch.Tensor(
-                    cluster_based(rep.numpy, n_cluster=n_cluster, n_pc=12, hidden_size=rep.shape[1]))
+                    cluster_based(rep.numpy(), n_cluster=n_cluster, n_pc=12, hidden_size=rep.shape[1]))
                 torch.save(cbie, f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/{lang}_cbie.pt')
             print(f"Finished saving embeddings for {lang} in model {args.model}.")
 
@@ -132,6 +145,8 @@ if __name__ == "__main__":
     parser.add_argument('--device', type=str, default="0", help="which GPU/device to use")
     parser.add_argument('--dataset', type=str, default="tatoeba", choices=["tatoeba", "wiki"],
                         help="which dataset to encode (tatoeba, wiki)")
+    parser.add_argument('--tatoeba_use_task_order', action='store_true', default=False,
+                        help='load tatoeba data with non-parallel order so there is sth to predict')
     parser.add_argument('--batch_size', type=int, default=128, help='batch size for encoding')
     parser.add_argument('--save_whitened', action='store_true', help='save embeddings processed with whitening as well')
     parser.add_argument('--save_cbie', action='store_true', help='save embeddings processed with cbie as well')

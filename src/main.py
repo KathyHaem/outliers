@@ -18,8 +18,8 @@ def main():
               "sentence-transformers/xlm-r-100langs-bert-base-nli-stsb-mean-tokens"]  # (which) others?
 
     for model in models:
-        args = argparse.Namespace(model=model, layer=7, device='0', dataset='tatoeba', batch_size=64,
-                                  save_whitened=True, save_cbie=True)
+        args = argparse.Namespace(model=model, layer=7, device='0', dataset='tatoeba', tatoeba_use_task_order=True,
+                                  batch_size=64, save_whitened=True, save_cbie=True)
         extract_analyse(args)
 
         # checking tatoeba performances
