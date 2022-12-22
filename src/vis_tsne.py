@@ -69,18 +69,7 @@ def load_embs(emb_file, load, do_cbie, do_whiten):
     return embs
 
 
-def main():
-    parser = argparse.ArgumentParser(description='visualise embeddings from a file with tSNE')
-    # parser.add_argument('--model', type=str, help="name of the model")
-    parser.add_argument('--emb_file', type=str, help="location of the file in question")
-    parser.add_argument('--parallel_emb_file', type=str, required=False, help="location of second emb file")
-    parser.add_argument('--parallel_vis', action='store_true', help='if two (parallel) langs should be in same plot')
-    parser.add_argument('--plot_file', type=str, help="where to save the plot")
-    parser.add_argument('--load', type=str, choices=["torch", "np"], help="library to use for loading [torch, np]")
-    parser.add_argument('--do_cbie', action='store_true', help='try doing cbie before')
-    parser.add_argument('--do_whiten', action='store_true', help='try doing whitening before')
-    args = parser.parse_args()
-
+def main(args):
     embs = load_embs(args.emb_file, args.load, args.do_cbie, args.do_whiten)
 
     if args.parallel_emb_file and args.parallel_vis:
@@ -95,4 +84,14 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description='visualise embeddings from a file with tSNE')
+    # parser.add_argument('--model', type=str, help="name of the model")
+    parser.add_argument('--emb_file', type=str, help="location of the file in question")
+    parser.add_argument('--parallel_emb_file', type=str, required=False, help="location of second emb file")
+    parser.add_argument('--parallel_vis', action='store_true', help='if two (parallel) langs should be in same plot')
+    parser.add_argument('--plot_file', type=str, help="where to save the plot")
+    parser.add_argument('--load', type=str, choices=["torch", "np"], help="library to use for loading [torch, np]")
+    parser.add_argument('--do_cbie', action='store_true', help='try doing cbie before')
+    parser.add_argument('--do_whiten', action='store_true', help='try doing whitening before')
+    args = parser.parse_args()
+    main(args)

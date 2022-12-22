@@ -6,23 +6,6 @@ import argparse
 
 from constants import langs_tatoeba, langs_wiki
 
-parser = argparse.ArgumentParser(description='Analyze anisotropy behaviour.')
-parser.add_argument('--model', type=str, help="name of the model to be analyzed")
-parser.add_argument('--layer', type=int, help="which model layer the embeddings are from")
-parser.add_argument('--dataset', type=str, default="tatoeba", choices=["tatoeba", "wiki"],
-                    help="use embeddings from this dataset (tatoeba, wiki)")
-parser.add_argument('--dim', type=int, nargs='*', default=-1, help="which dimension to zero out if any")
-
-args = parser.parse_args()
-
-
-if args.dataset == "tatoeba":
-    langs = langs_tatoeba
-elif args.dataset == "wiki":
-    langs = langs_wiki
-else:
-    raise ValueError("unknown dataset argument")
-
 
 def cos_contrib(emb1, emb2):
     numerator_terms = emb1 * emb2
@@ -37,15 +20,24 @@ def remove_dims(dim, emb):
     return emb_transposed.T
 
 
-def main():
+def main(args):
+    if args.dataset == "tatoeba":
+        langs = langs_tatoeba
+    elif args.dataset == "wiki":
+        langs = langs_wiki
+    else:
+        raise ValueError("unknown dataset argument")
+
     avg_anisotropy = 0
     for lang in langs:
         print(f"Current language: {lang}")
         cos_contribs_by_layer = []
         layer_cosine_contribs = []
         if args.dataset == 'tatoeba':
-            target_embs = torch.load(f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/{lang}.pt')
-            eng_embs = torch.load(f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/eng.pt')
+            target_embs = torch.load(
+                f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/{lang}{args.append_file_name}.pt')
+            eng_embs = torch.load(
+                f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/eng{args.append_file_name}.pt')
 
             # if some dimension should be zeroed out first
             if args.dim != -1:
@@ -60,7 +52,8 @@ def main():
                 layer_cosine_contribs.append(cos_contrib(emb1, emb2))
 
         elif args.dataset == 'wiki':
-            target_embs = torch.load(f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/{lang}.pt')
+            target_embs = torch.load(
+                f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/{lang}{args.append_file_name}.pt')
 
             # if some dimension should be zeroed out first
             if args.dim != -1:
@@ -117,4 +110,14 @@ def main():
     print(f"Average Anisotropy: {avg_anisotropy / len(langs)}")
 
 
-main()
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Analyze anisotropy behaviour.')
+    parser.add_argument('--model', type=str, help="name of the model to be analyzed")
+    parser.add_argument('--layer', type=int, help="which model layer the embeddings are from")
+    parser.add_argument('--dataset', type=str, default="tatoeba", choices=["tatoeba", "wiki"],
+                        help="use embeddings from this dataset (tatoeba, wiki)")
+    parser.add_argument('--append_file_name', type=str, default="", help='to load files à la .._whitened.pt')
+    parser.add_argument('--dim', type=int, nargs='*', default=-1, help="which dimension to zero out if any")
+
+    args = parser.parse_args()
+    main(args)

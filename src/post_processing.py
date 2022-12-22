@@ -83,7 +83,7 @@ def cluster_based(representations, n_cluster: int, n_pc: int, hidden_size: int =
         for index in cluster_representations[i]:
             sum_vec = np.zeros((1, hidden_size))
 
-            for j in range(n_pc):
+            for j in range(min(n_pc, component.shape[0])):
                 sum_vec = sum_vec + np.dot(cluster_representations[i][index],
                                            np.expand_dims(np.transpose(component)[:, j], 1)) * component[j]
 
