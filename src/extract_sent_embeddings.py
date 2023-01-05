@@ -1,11 +1,13 @@
 """ turning the colab file into a script """
 import argparse
 import os
+import zipfile
 
 import pandas as pd
 import torch
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, AutoModel
+import wget
 
 from constants import langs_tatoeba, langs_wiki, lang_dict_3_2
 from post_processing import whitening, cluster_based
@@ -68,6 +70,16 @@ def load_model(args, device):
     return model, tokenizer
 
 
+def sentences_from_two_cols(path):
+    col1, col2 = [], []
+    with open(path, 'r') as f_in:
+        for line in f_in:
+            sent1, sent2 = line.strip().split("\t")
+            col1.append(sent1)
+            col2.append(sent2)
+    return col1, col2
+
+
 def main(args):
     try:
         int(args.device)
@@ -79,7 +91,8 @@ def main(args):
         langs = langs_tatoeba
     elif args.dataset == "wiki":
         langs = langs_wiki
-
+    elif args.dataset == "sts":
+        langs = []
     else:
         raise ValueError("unknown dataset argument")
 
@@ -137,13 +150,58 @@ def main(args):
                 torch.save(cbie, f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/{lang}_cbie.pt')
             print(f"Finished saving embeddings for {lang} in model {args.model}.")
 
+    elif args.dataset == 'sts':
+        if not os.path.exists('../data/sts'):
+            print("Download and extract the STS data.")
+            os.makedirs('../data/sts/')
+            wget.download("http://alt.qcri.org/semeval2017/task1/data/uploads/sts2017.eval.v1.1.zip", '../data/STS_text.zip')
+            with zipfile.ZipFile('../data/STS_text.zip', 'r') as zip_ref:
+                zip_ref.extractall('../data')
+            os.rename('../data/STS2017.eval.v1.1/STS.input.track2.ar-en.txt', '../data/sts/')
+            os.rename('../data/STS2017.eval.v1.1/STS.input.track4a.es-en.txt', '../data/sts/')
+            os.rename('../data/STS2017.eval.v1.1/STS.input.track4b.es-en.txt', '../data/sts/')
+            os.rename('../data/STS2017.eval.v1.1/STS.input.track6.tr-en.txt', '../data/sts/')
+
+            wget.download("http://alt.qcri.org/semeval2017/task1/data/uploads/sts2017.gs.zip", '../data/STS_gt.zip')
+            with zipfile.ZipFile('../data/STS_gt.zip', 'r') as zip_ref:
+                zip_ref.extractall('../data')
+            os.rename('../data/STS2017.gs/STS.gs.track2.ar-en.txt', '../data/sts/')
+            os.rename('../data/STS2017.gs/STS.gs.track4a.es-en.txt', '../data/sts/')
+            os.rename('../data/STS2017.gs/STS.gs.track4b.es-en.txt', '../data/sts/')
+            os.rename('../data/STS2017.gs/STS.gs.track6.tr-en.txt', '../data/sts/')
+
+            os.remove('../data/STS_gt.zip')
+            os.remove('../data/STS_text.zip')
+            os.removedirs('../data/STS2017.eval.v1.1/')
+            os.removedirs('../data/STS2017.gs/')
+
+        def extract_sts(file, track, lng1, lng2):
+            lng1_sent, lng2_sent = sentences_from_two_cols(f'../data/sts/{file}')
+            os.makedirs(f'../embs/{args.dataset}/{args.model}/{args.layer}/{track}/', exist_ok=True)
+            rep = get_embeds(lng1_sent, model, tokenizer, args, device)
+            torch.save(rep, f'../embs/{args.dataset}/{args.model}/{args.layer}/{track}/{lng1}.pt')
+            rep = get_embeds(lng2_sent, model, tokenizer, args, device)
+            torch.save(rep, f'../embs/{args.dataset}/{args.model}/{args.layer}/{track}/{lng2}.pt')
+
+        print("Extract Track 2 ar-en.")
+        extract_sts('STS.input.track2.ar-en.txt', 'track2', 'en', 'ar')
+
+        print("Extract Track 4a es-en.")
+        extract_sts('STS.input.track4a.es-en.txt', 'track4a', 'es', 'en')
+
+        print("Extract Track 4b es-en.")
+        extract_sts('STS.input.track4b.es-en.txt', 'track4a', 'en', 'es')
+
+        print("Extract Track 6 tr-en.")
+        extract_sts('STS.input.track6.tr-en.txt', 'track6', 'en', 'tr')
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Establish outlier dimensions.')
-    parser.add_argument('--model', type=str, help="name of the model")
-    parser.add_argument('--layer', type=int, help="which model layer to save embeddings are from")
+    parser.add_argument('--model', type=str, help="name of the model", required=True)
+    parser.add_argument('--layer', type=int, help="which model layer to save embeddings are from", required=True)
     parser.add_argument('--device', type=str, default="0", help="which GPU/device to use")
-    parser.add_argument('--dataset', type=str, default="tatoeba", choices=["tatoeba", "wiki"],
+    parser.add_argument('--dataset', type=str, default="tatoeba", choices=["tatoeba", "wiki", "sts"],
                         help="which dataset to encode (tatoeba, wiki)")
     parser.add_argument('--tatoeba_use_task_order', action='store_true', default=False,
                         help='load tatoeba data with non-parallel order so there is sth to predict')

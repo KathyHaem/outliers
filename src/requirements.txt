@@ -11,3 +11,4 @@ pythainlp
 jieba
 matplotlib
 seaborn
+wget
