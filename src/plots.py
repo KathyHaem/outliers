@@ -147,6 +147,8 @@ def main(args):
         langs = langs_tatoeba
     elif args.dataset == "wiki":
         langs = langs_wiki
+    elif args.dataset == "sts":
+        return
     else:
         raise ValueError("unknown dataset argument")
 

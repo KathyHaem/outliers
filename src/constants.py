@@ -21,3 +21,13 @@ lang_dict = {'ar': 'ara', 'he': 'heb', 'vi': 'vie', 'id': 'ind',
              'et': 'est', 'fi': 'fin', 'hu': 'hun', 'fa': 'pes', 'su': 'sun'}
 
 lang_dict_3_2 = dict((v, k) for k, v in lang_dict.items())
+
+sts_tracks = [
+    'track2-ar-en', 'track4a-es-en', 'track4b-es-en', 'track6-tr-en']
+
+sts_gold_files = {
+    'track2-ar-en':  '../data/sts/STS.gs.track2.ar-en.txt',
+    'track4a-es-en': '../data/sts/STS.gs.track4a.es-en.txt',
+    'track4b-es-en': '../data/sts/STS.gs.track4b.es-en.txt',
+    'track6-tr-en':  '../data/sts/STS.gs.track6.tr-en.txt'
+}

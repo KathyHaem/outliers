@@ -9,7 +9,7 @@ import torch
 # Code used to:
 # a) Identify magnitude-wise outliers for XLM-R
 # b) Identify magnitude-wise outliers per each language (used in chapter 5) + generate visualizations
-from constants import langs_tatoeba, langs_wiki, lang_dict_3_2
+from constants import langs_tatoeba, langs_wiki, lang_dict_3_2, sts_tracks
 
 
 def main(args):
@@ -17,6 +17,11 @@ def main(args):
         langs = langs_tatoeba
     elif args.dataset == "wiki":
         langs = langs_wiki
+    elif args.dataset == "sts":
+        langs = []
+        for track in sts_tracks:
+            langs.append((track, "lng1"))
+            langs.append((track, "lng2"))
     else:
         raise ValueError("unknown dataset argument")
 
@@ -25,8 +30,14 @@ def main(args):
         mean_sum_vec = None
         for lang in langs:
             print(f"Considering language {lang}.")
+            if type(lang) is tuple:
+                lang_or_track = lang[0]
+                lang = lang[1]
+            else:
+                lang_or_track = lang
+
             target_emb = torch.load(
-                f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/{lang}{args.append_file_name}.pt')
+                f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang_or_track}/{lang}{args.append_file_name}.pt')
             if mean_sum_vec is None:
                 mean_sum_vec = torch.mean(target_emb, axis=0)
             else:
@@ -54,6 +65,12 @@ def main(args):
 
         for lang in langs:
             print(f"Considering language {lang}.")
+            if type(lang) is tuple:
+                lang_or_track = lang[0]
+                lang = lang[1]
+            else:
+                lang_or_track = lang
+
             target_emb = torch.load(
                 f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/{lang}{args.append_file_name}.pt')
             mean_vec = torch.mean(target_emb, axis=0)

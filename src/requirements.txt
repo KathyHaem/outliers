@@ -12,3 +12,5 @@ jieba
 matplotlib
 seaborn
 wget
+seqeval
+tensorboardX

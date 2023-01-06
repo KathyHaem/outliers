@@ -4,7 +4,7 @@ import torch
 import random
 import argparse
 
-from constants import langs_tatoeba, langs_wiki
+from constants import langs_tatoeba, langs_wiki, sts_tracks
 
 
 def cos_contrib(emb1, emb2):
@@ -25,6 +25,8 @@ def main(args):
         langs = langs_tatoeba
     elif args.dataset == "wiki":
         langs = langs_wiki
+    elif args.dataset == "sts":
+        langs = sts_tracks
     else:
         raise ValueError("unknown dataset argument")
 
@@ -33,11 +35,17 @@ def main(args):
         # print(f"Current language: {lang}")
         cos_contribs_by_layer = []
         layer_cosine_contribs = []
-        if args.dataset == 'tatoeba':
-            target_embs = torch.load(
-                f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/{lang}{args.append_file_name}.pt')
-            eng_embs = torch.load(
-                f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/eng{args.append_file_name}.pt')
+        if args.dataset == 'tatoeba' or args.dataset == 'sts':
+            if args.dataset == 'tatoeba':
+                target_embs = torch.load(
+                    f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/{lang}{args.append_file_name}.pt')
+                eng_embs = torch.load(
+                    f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/eng{args.append_file_name}.pt')
+            elif args.dataset == 'sts':
+                target_embs = torch.load(
+                    f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/lng1{args.append_file_name}.pt')
+                eng_embs = torch.load(
+                    f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/lng2{args.append_file_name}.pt')
 
             # if some dimension should be zeroed out first
             if args.dim != -1:

@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, AutoModel
 import wget
 
-from constants import langs_tatoeba, langs_wiki, lang_dict_3_2
+from constants import langs_tatoeba, langs_wiki, lang_dict_3_2, sts_gold_files
 from post_processing import whitening, cluster_based
 
 
@@ -175,25 +175,38 @@ def main(args):
             os.removedirs('../data/STS2017.eval.v1.1/')
             os.removedirs('../data/STS2017.gs/')
 
+        def extract_sts_lng(file, track, sentences, lng_id):
+            rep = get_embeds(sentences, model, tokenizer, args, device)
+            torch.save(rep, f'../embs/{args.dataset}/{args.model}/{args.layer}/{track}/{lng_id}.pt')
+            if args.save_whitened:
+                whitened = torch.Tensor(whitening(rep.numpy()))
+                torch.save(whitened, f'../embs/{args.dataset}/{args.model}/{args.layer}/{track}/{lng_id}_whitened.pt')
+            if args.save_cbie:
+                n_cluster = max(rep.shape[0] // 300, 1)
+                cbie = torch.Tensor(
+                    cluster_based(rep.numpy(), n_cluster=n_cluster, n_pc=12, hidden_size=rep.shape[1]))
+                torch.save(cbie, f'../embs/{args.dataset}/{args.model}/{args.layer}/{track}/{lng_id}_cbie.pt')
+
         def extract_sts(file, track, lng1, lng2):
             lng1_sent, lng2_sent = sentences_from_two_cols(f'../data/sts/{file}')
             os.makedirs(f'../embs/{args.dataset}/{args.model}/{args.layer}/{track}/', exist_ok=True)
-            rep = get_embeds(lng1_sent, model, tokenizer, args, device)
-            torch.save(rep, f'../embs/{args.dataset}/{args.model}/{args.layer}/{track}/{lng1}.pt')
-            rep = get_embeds(lng2_sent, model, tokenizer, args, device)
-            torch.save(rep, f'../embs/{args.dataset}/{args.model}/{args.layer}/{track}/{lng2}.pt')
+            extract_sts_lng(file, track, lng1_sent, "lng1")
+            extract_sts_lng(file, track, lng2_sent, "lng2")
+
 
         print("Extract Track 2 ar-en.")
-        extract_sts('STS.input.track2.ar-en.txt', 'track2', 'en', 'ar')
+        extract_sts('STS.input.track2.ar-en.txt', 'track2-ar-en', 'en', 'ar')
 
         print("Extract Track 4a es-en.")
-        extract_sts('STS.input.track4a.es-en.txt', 'track4a', 'es', 'en')
+        extract_sts('STS.input.track4a.es-en.txt', 'track4a-es-en', 'es', 'en')
 
         print("Extract Track 4b es-en.")
-        extract_sts('STS.input.track4b.es-en.txt', 'track4a', 'en', 'es')
+        extract_sts('STS.input.track4b.es-en.txt', 'track4b-es-en', 'en', 'es')
 
         print("Extract Track 6 tr-en.")
-        extract_sts('STS.input.track6.tr-en.txt', 'track6', 'en', 'tr')
+        extract_sts('STS.input.track6.tr-en.txt', 'track6-tr-en', 'en', 'tr')
+
+        print(f"Finished saving STS for model {args.model}.")
 
 
 if __name__ == "__main__":
