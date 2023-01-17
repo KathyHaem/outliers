@@ -31,9 +31,10 @@ def main(args):
         raise ValueError("unknown dataset argument")
 
     avg_anisotropy = 0
+    mean_contribs = []
     for lang in langs:
         # print(f"Current language: {lang}")
-        cos_contribs_by_layer = []
+
         layer_cosine_contribs = []
         if args.dataset == 'tatoeba' or args.dataset == 'sts':
             if args.dataset == 'tatoeba':
@@ -77,28 +78,25 @@ def main(args):
                 emb1, emb2 = target_embs[pair[0]], target_embs[pair[1]]
                 layer_cosine_contribs.append(cos_contrib(emb1, emb2))
 
-        layer_cosine_contribs = np.array(layer_cosine_contribs)
-        # layer_cosine_sims = layer_cosine_contribs.sum(axis=1)
+        layer_cosine_contribs = np.stack(layer_cosine_contribs)
         layer_cosine_contribs_mean = layer_cosine_contribs.mean(axis=0)
 
-        cos_contribs_by_layer.append(layer_cosine_contribs_mean)
-        cos_contribs_by_layer = np.array(cos_contribs_by_layer)
-
-        aniso = cos_contribs_by_layer.sum(axis=1)
+        aniso = layer_cosine_contribs_mean.sum()
         avg_anisotropy += aniso
+        mean_contribs.append(layer_cosine_contribs_mean)
 
         top_dims = np.argsort(layer_cosine_contribs_mean)[-10:]
         top_dims = np.flip(top_dims)
-        top = cos_contribs_by_layer[0, top_dims[0]] / aniso[0]
-        second = cos_contribs_by_layer[0, top_dims[1]] / aniso[0]
-        third = cos_contribs_by_layer[0, top_dims[2]] / aniso[0]
-        fourth = cos_contribs_by_layer[0, top_dims[3]] / aniso[0]
-        fifth = cos_contribs_by_layer[0, top_dims[4]] / aniso[0]
-        six = cos_contribs_by_layer[0, top_dims[5]] / aniso[0]
-        seven = cos_contribs_by_layer[0, top_dims[6]] / aniso[0]
-        eight = cos_contribs_by_layer[0, top_dims[7]] / aniso[0]
-        nine = cos_contribs_by_layer[0, top_dims[8]] / aniso[0]
-        ten = cos_contribs_by_layer[0, top_dims[9]] / aniso[0]
+        top = layer_cosine_contribs_mean[top_dims[0]] / aniso
+        second = layer_cosine_contribs_mean[top_dims[1]] / aniso
+        third = layer_cosine_contribs_mean[top_dims[2]] / aniso
+        fourth = layer_cosine_contribs_mean[top_dims[3]] / aniso
+        fifth = layer_cosine_contribs_mean[top_dims[4]] / aniso
+        six = layer_cosine_contribs_mean[top_dims[5]] / aniso
+        seven = layer_cosine_contribs_mean[top_dims[6]] / aniso
+        eight = layer_cosine_contribs_mean[top_dims[7]] / aniso
+        nine = layer_cosine_contribs_mean[top_dims[8]] / aniso
+        ten = layer_cosine_contribs_mean[top_dims[9]] / aniso
 
         print(f"### {lang} ###")
         print(f"Top 10 dims: {top_dims}")
@@ -115,7 +113,17 @@ def main(args):
         print(top_dims[8], nine)
         print(top_dims[9], ten)
     print()
-    print(f"Average Anisotropy: {avg_anisotropy / len(langs)}")
+    avg_anisotropy = avg_anisotropy / len(langs)
+    print(f"Average Anisotropy: {avg_anisotropy}")
+
+    mean_contribs = np.stack(mean_contribs).mean(axis=0)
+    top_dims = np.argsort(mean_contribs)[-10:]
+    top_dims = np.flip(top_dims)
+    print(f"Top 10 dims: {top_dims}")
+    print("Mean cosine contributions:")
+    for i in range(10):
+        d = top_dims[i]
+        print(d, mean_contribs[d] / avg_anisotropy)
 
 
 if __name__ == "__main__":
