@@ -3,6 +3,7 @@ import json
 from scipy import stats
 from collections import defaultdict
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 
 from constants import langs_tatoeba_2
@@ -58,6 +59,7 @@ def calculate_spearman():
 
 
 def cosine_difference():
+    matplotlib.rcParams.update({'font.size': 12})
     colors = ["#F06292", "#880E4F", "#FF80AB", "#CE93D8", "#9575CD", "#8C9EFF", "#3F51B5", "#90CAF9",
               "#1E88E5", "#1565C0", "#82B1FF", "#29B6F6", "#01579B", "#0097A7", "#4DB6AC", "#00695C",
               "#81C784", "#43A047", "#2E7D32", "#AED581", "#689F38", "#FFEE58", "#FBC02D", "#F57F17",
@@ -84,13 +86,15 @@ def cosine_difference():
                 plt.plot(mod_mean_cosines, linestyle="--", color=colors[color_id], label='_nolegend_')
                 color_id += 1
     ax = plt.gca()
-    ax.set_ylim([0.0, 1.0])
-    plt.legend(title="\u2014  non-modified model\n---  modified model", ncol=3, loc='center left',
-               bbox_to_anchor=(1, 0.5))
-    plt.xlabel("ranking position")
+    ax.set_ylim([0.05, 0.85])
+    ax.set_xlim([0, 250])
+    plt.legend(title="\u2014  original\n---  modified\n", ncol=2, loc='center left',
+               bbox_to_anchor=(1, 0.5), handlelength=0.8, columnspacing=0.5, borderpad=0.0,
+               labelspacing=0.15, title_fontsize=16, frameon=False)
+    plt.xlabel("ranking position", fontsize=16)
     plt.xticks(np.arange(0, 251, 50))
-    plt.ylabel("cosine distance")
-    plt.savefig(f'cosines_{args.model}_{args.dimension}.png', dpi=300, bbox_inches="tight")
+    plt.ylabel("cosine distance", fontsize=16)
+    plt.savefig(f'cosines_{args.model}_{args.dimension}.pdf', bbox_inches="tight")
     # plt.show()
 
 
