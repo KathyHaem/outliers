@@ -86,14 +86,14 @@ def cosine_difference():
                 plt.plot(mod_mean_cosines, linestyle="--", color=colors[color_id], label='_nolegend_')
                 color_id += 1
     ax = plt.gca()
-    ax.set_ylim([0.05, 0.85])
+    ax.set_ylim([0.05, 0.95])
     ax.set_xlim([0, 250])
     plt.legend(title="\u2014  original\n---  modified\n", ncol=2, loc='center left',
                bbox_to_anchor=(1, 0.5), handlelength=0.8, columnspacing=0.5, borderpad=0.0,
-               labelspacing=0.15, title_fontsize=16, frameon=False)
-    plt.xlabel("ranking position", fontsize=16)
+               labelspacing=0.05, title_fontsize=18, frameon=False)
+    plt.xlabel("ranking position", fontsize=18)
     plt.xticks(np.arange(0, 251, 50))
-    plt.ylabel("cosine distance", fontsize=16)
+    plt.ylabel("cosine distance", fontsize=18)
     plt.savefig(f'cosines_{args.model}_{args.dimension}.pdf', bbox_inches="tight")
     # plt.show()
 
