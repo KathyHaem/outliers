@@ -305,15 +305,18 @@ def bucc_eval(candidates_file, gold_file, src_file, trg_file, src_id_file, trg_i
               encoding='utf-8'):
     candidate2score = read_candidate2score(candidates_file, src_file, trg_file, src_id_file, trg_id_file, encoding)
 
-    if threshold is not None and gold_file is None:
+    if threshold is None and gold_file is None:
+        return None
+    elif threshold is not None:
         print(' - using threshold {}'.format(threshold))
-    else:
+    elif gold_file is not None:
         print(' - optimizing threshold on gold alignments {}'.format(gold_file))
         gold = {line.strip() for line in open(gold_file)}
         threshold = bucc_optimize(candidate2score, gold)
 
     bitexts = bucc_extract(candidate2score, threshold, predict_file, encoding)
     if gold_file is not None:
+        gold = {line.strip() for line in open(gold_file)}
         ncorrect = len(gold.intersection(bitexts))
         if ncorrect > 0:
             precision = ncorrect / len(bitexts)

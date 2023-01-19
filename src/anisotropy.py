@@ -87,31 +87,16 @@ def main(args):
 
         top_dims = np.argsort(layer_cosine_contribs_mean)[-10:]
         top_dims = np.flip(top_dims)
-        top = layer_cosine_contribs_mean[top_dims[0]] / aniso
-        second = layer_cosine_contribs_mean[top_dims[1]] / aniso
-        third = layer_cosine_contribs_mean[top_dims[2]] / aniso
-        fourth = layer_cosine_contribs_mean[top_dims[3]] / aniso
-        fifth = layer_cosine_contribs_mean[top_dims[4]] / aniso
-        six = layer_cosine_contribs_mean[top_dims[5]] / aniso
-        seven = layer_cosine_contribs_mean[top_dims[6]] / aniso
-        eight = layer_cosine_contribs_mean[top_dims[7]] / aniso
-        nine = layer_cosine_contribs_mean[top_dims[8]] / aniso
-        ten = layer_cosine_contribs_mean[top_dims[9]] / aniso
 
         print(f"### {lang} ###")
         print(f"Top 10 dims: {top_dims}")
         print(f"Estimated anisotropy: {aniso}")
-        print("Contributions to expected cosine sim between random embeddings:")
-        print(top_dims[0], top)
-        print(top_dims[1], second)
-        print(top_dims[2], third)
-        print(top_dims[3], fourth)
-        print(top_dims[4], fifth)
-        print(top_dims[5], six)
-        print(top_dims[6], seven)
-        print(top_dims[7], eight)
-        print(top_dims[8], nine)
-        print(top_dims[9], ten)
+        if args.verbose:
+            print("Contributions to expected cosine sim between random embeddings:")
+            for i in range(10):
+                d = top_dims[i]
+                print(d, layer_cosine_contribs_mean[d])
+
     print()
     avg_anisotropy = avg_anisotropy / len(langs)
     print(f"Average Anisotropy: {avg_anisotropy}")
@@ -123,17 +108,18 @@ def main(args):
     print("Mean cosine contributions:")
     for i in range(10):
         d = top_dims[i]
-        print(d, mean_contribs[d] / avg_anisotropy)
+        print(d, mean_contribs[d])
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Analyze anisotropy behaviour.')
     parser.add_argument('--model', type=str, help="name of the model to be analyzed")
     parser.add_argument('--layer', type=int, help="which model layer the embeddings are from")
-    parser.add_argument('--dataset', type=str, default="tatoeba", choices=["tatoeba", "wiki"],
+    parser.add_argument('--dataset', type=str, default="tatoeba", choices=["tatoeba", "wiki", "sts"],
                         help="use embeddings from this dataset (tatoeba, wiki)")
     parser.add_argument('--append_file_name', type=str, default="", help='to load files à la .._whitened.pt')
     parser.add_argument('--dim', type=int, nargs='*', default=-1, help="which dimension to zero out if any")
+    parser.add_argument('--verbose', action='store_true', default=False, help="go into per language details")
 
     args = parser.parse_args()
     main(args)

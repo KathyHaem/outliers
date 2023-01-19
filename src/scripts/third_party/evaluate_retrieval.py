@@ -68,11 +68,11 @@ MODEL_CLASSES = {
 # REMOVE_DIMS = [12, 63, 145, 151, 152, 266, 267, 459, 723, 728, 588, 306, 239, 184, 180]
 
 
-def load_embeddings(embed_file, remove_dims=[]):
+def load_embeddings(embed_file, remove_dims=None):
     logger.info(' loading from {}'.format(embed_file))
     # embeds = np.load(embed_file, mmap_mode="r")
     embeds = np.load(embed_file)
-    if len(remove_dims) > 0:
+    if remove_dims is not None:
         print(f"Removing dimensions {remove_dims}")
         for s in embeds:
             for dim in remove_dims:
@@ -178,10 +178,11 @@ def load_model(args, lang, output_hidden_states=None):
 
 def extract_embeddings_bucc_tatoeba(args, text_file, tok_file, embed_file, lang='en', pool_type='mean'):
     num_embeds = args.num_layers
-    # if args.task_name == 'bucc2018':
-    #   all_embed_files = ["{}_7.npy".format(embed_file)] # only compute and save layer 7 embs for BUCC
+    # if args.task_name == 'bucc2018': Warning: trying to save only layer 7 doesn't actually work right now;
+    # it would actually end up saving layer 0 and pretending it's layer 7!!
+    #    all_embed_files = ["{}_7.npy".format(embed_file)]  # only compute and save layer 7 embs for BUCC
     # else:
-    #   all_embed_files = ["{}_{}.npy".format(embed_file, i) for i in range(num_embeds)]
+    #    all_embed_files = ["{}_{}.npy".format(embed_file, i) for i in range(num_embeds)]
     all_embed_files = [f"{embed_file}_{i}.npy" for i in range(num_embeds)]
 
     if all(os.path.exists(f) for f in all_embed_files):
@@ -198,10 +199,10 @@ def extract_embeddings_bucc_tatoeba(args, text_file, tok_file, embed_file, lang=
     num_batch = int(np.ceil(len(sent_toks) * 1.0 / batch_size))
     num_sents = len(sent_toks)
 
-    # if args.task_name == 'bucc2018': # again, exception for BUCC
-    #   all_embeds = [np.zeros(shape=(num_sents, args.embed_size), dtype=np.float32)]
+    # if args.task_name == 'bucc2018':  # again, exception for BUCC
+    #    all_embeds = [np.zeros(shape=(num_sents, args.embed_size), dtype=np.float32)]
     # else:
-    #   all_embeds = [np.zeros(shape=(num_sents, args.embed_size), dtype=np.float32) for _ in range(num_embeds)]
+    #    all_embeds = [np.zeros(shape=(num_sents, args.embed_size), dtype=np.float32) for _ in range(num_embeds)]
     all_embeds = [np.zeros(shape=(num_sents, args.embed_size), dtype=np.float32) for _ in range(num_embeds)]
     print("allocated empty embedding matrix of shape {}, {}".format(len(all_embeds), all_embeds[0].shape))
     for i in tqdm(range(num_batch), desc='Batch'):
@@ -220,12 +221,9 @@ def extract_embeddings_bucc_tatoeba(args, text_file, tok_file, embed_file, lang=
 
             if args.model_type == 'bert' or args.model_type == 'xlmr':
                 # batch_size, sequence_length, hidden_size
-                last_layer_outputs: torch.FloatTensor = outputs["last_hidden_state"]
-                first_token_outputs = outputs["pooler_output"]
                 all_layer_outputs: Tuple[torch.FloatTensor] = outputs["hidden_states"]
             elif args.model_type == 'xlm':
-                last_layer_outputs, all_layer_outputs = outputs
-                first_token_outputs = last_layer_outputs[:, 0]  # first element of the last layer
+                _, all_layer_outputs = outputs
 
             # get the pool embedding
             if pool_type == 'cls':
@@ -237,7 +235,7 @@ def extract_embeddings_bucc_tatoeba(args, text_file, tok_file, embed_file, lang=
 
         for embeds, batch_embeds in zip(all_embeds, all_batch_embeds):
             embeds[start_index: end_index] = batch_embeds.cpu().numpy().astype(np.float32)
-        del last_layer_outputs, first_token_outputs, all_layer_outputs
+        del all_layer_outputs
         torch.cuda.empty_cache()
 
     if embed_file is not None:
@@ -389,13 +387,13 @@ def main(args):
 def eval_bucc(args):
     best_threshold = None
     SL, TL = args.src_language, args.tgt_language
-    # for split in ['dev', 'test']:
-    for split in ['dev']:
+    for split in ['dev', 'test']:
         prefix = os.path.join(args.output_dir, f'{SL}-{TL}.{split}')
         if args.extract_embeds:
             for lang in [SL, TL]:
                 extract_embeddings_bucc_tatoeba(
-                    args, f'{prefix}.{lang}.txt', f'{prefix}.{lang}.tok', f'{prefix}.{lang}.emb', lang=lang)
+                    args, text_file=f'{prefix}.{lang}.txt', tok_file=f'{prefix}.{lang}.tok',
+                    embed_file=f'{prefix}.{lang}.emb', lang=lang)
 
         if args.mine_bitext:
             num_layers = args.num_layers
@@ -412,13 +410,13 @@ def eval_bucc(args):
                 if os.path.exists(cand2score_file):
                     logger.info('cand2score_file {} exists'.format(cand2score_file))
                 else:
-                    x = load_embeddings(f'{prefix}.{SL}.emb_{idx}.npy')
-                    y = load_embeddings(f'{prefix}.{TL}.emb_{idx}.npy')
+                    x = load_embeddings(f'{prefix}.{SL}.emb_{idx}.npy', args.remove_dim)
+                    y = load_embeddings(f'{prefix}.{TL}.emb_{idx}.npy', args.remove_dim)
                     mine_bitext(x, y, f'{prefix}.{SL}.txt', f'{prefix}.{TL}.txt', cand2score_file, dist=args.dist,
                                 use_gpu=(torch.cuda.is_available() and not args.no_cuda),
                                 use_shift_embeds=args.use_shift_embeds)
                 # gold_file = f'{prefix}.gold'
-                gold_file = f'download/bucc2018/{SL}-en.dev.gold'
+                gold_file = f'../data/bucc2018/{SL}-en.{split}.gold'
                 print("gold file name:", gold_file)
 
                 """if os.path.exists(gold_file):
@@ -434,6 +432,7 @@ def eval_bucc(args):
                 predict_file = os.path.join(args.predict_dir, f'bucc2018/test-{SL}.tsv')
                 # create_predict_file = open(predict_file, 'w+')
                 print("predict file name:", predict_file)
+                os.makedirs(os.path.dirname(predict_file), exist_ok=True)
                 results = bucc_eval(cand2score_file, gold_file, f'{prefix}.{SL}.txt', f'{prefix}.{TL}.txt',
                                     f'{prefix}.{SL}.id', f'{prefix}.{TL}.id', predict_file, best_threshold)
                 best_threshold = results['best-threshold']
@@ -645,7 +644,7 @@ def predict_tatoeba(args, src_embs, tgt_embs):
     with open(os.path.join(args.predict_dir, f'test-{args.src_language}.tsv'), 'w') as fout:
         for p in predictions:
             fout.write(str(p) + '\n')
-    print(f"finished writing predictions for {args.src_language}-{args.tgt_language}")
+    # print(f"finished writing predictions for {args.src_language}-{args.tgt_language}")
 
 
 def extract_rankings(all_src_embeds, all_tgt_embeds, args, src_lang2, tgt_lang2):
