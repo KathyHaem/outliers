@@ -1,4 +1,3 @@
-# Adjusted original code from https://github.com/wtimkey/rogue-dimensions/blob/main/replication.ipynb
 import numpy as np
 import torch
 import random
@@ -8,6 +7,8 @@ from constants import langs_tatoeba, langs_wiki, sts_tracks
 
 
 def cos_contrib(emb1, emb2):
+    """ Adopted as-is from https://github.com/wtimkey/rogue-dimensions/blob/main/replication.ipynb
+    Code from that repo is licensed under Apache 2.0: https://github.com/wtimkey/rogue-dimensions/blob/main/LICENSE"""
     numerator_terms = emb1 * emb2
     denom = np.linalg.norm(emb1) * np.linalg.norm(emb2)
     return np.array(numerator_terms / denom)
@@ -34,7 +35,12 @@ def main(args):
     mean_contribs = []
     for lang in langs:
         # print(f"Current language: {lang}")
-
+        """ Adapted cosine contribution calculation from
+        https://github.com/wtimkey/rogue-dimensions/blob/main/replication.ipynb
+        Changes: We add a version for parallel data and code for handling different datasets; we only calculate
+        contributions for one layer at a time but consider multiple languages, which we also average in the end.
+        We calculate up to the top ten contributing dimensions.
+        """
         layer_cosine_contribs = []
         if args.dataset == 'tatoeba' or args.dataset == 'sts':
             if args.dataset == 'tatoeba':

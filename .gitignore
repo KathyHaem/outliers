@@ -3,9 +3,9 @@ venv36/
 .idea/
 data/
 embs/
-from-alina/models/
-from-alina/graphics/
-from-alina/code/google_colab/
-from-alina/plots/
+models/
+bucc-out/
+predictions/
+from-alina/
 plots/
 *.pyc

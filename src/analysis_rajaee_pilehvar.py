@@ -1,4 +1,7 @@
-""" Adapted from https://github.com/Sara-Rajaee/Multilingual-Isotropy"""
+""" Adapted from https://github.com/Sara-Rajaee/Multilingual-Isotropy
+We did not use this in our final experiments but rather refer to this and refactored it slightly to understand and
+reproduce the paper it came from.
+"""
 
 import argparse
 import math as mt
@@ -134,7 +137,7 @@ def vis_outliers(lang, base_dir, model_name, fig_dir, hidden_size=768):
 
 
 # Loading mBERT
-# todo i want to use pytorch and automodel, would that somehow change the results??
+# i use pytorch and automodel instead of TF, would that somehow change the results??
 # casing = "bert-base-multilingual-uncased"
 # tokenizer_mBERT = BertTokenizer.from_pretrained(casing, do_lower_case=True, add_special_tokens=True)
 # config = BertConfig(casing, output_hidden_states=True)
@@ -144,7 +147,7 @@ def vis_outliers(lang, base_dir, model_name, fig_dir, hidden_size=768):
 def load_model(model_name="bert-base-multilingual-uncased"):
     config = AutoConfig.from_pretrained(model_name, output_hidden_states=True)
     tokenizer = AutoTokenizer.from_pretrained(model_name, do_lower_case=True,
-                                              add_special_tokens=True)  # todo do_lower_case=False for other models
+                                              add_special_tokens=True)  # do_lower_case=False for other models
     model = AutoModel.from_pretrained(model_name)  # TFAutoModel.from_pretrained(model_name)
     model.trainable = False
     return config, tokenizer, model
@@ -159,7 +162,7 @@ def main():
     parser.add_argument('--base_dir', type=str, help="where to save/load representations for the analysis")
     parser.add_argument('--fig_dir', type=str, help="where to save figures")
     parser.add_argument('--do_cbie', action='store_true', help="if True, apply cbie before analysis")
-    # defaults taken from R&P's paper, but not totally sure why those numbers
+    # defaults taken from R&P's paper
     parser.add_argument('--n_cluster', type=int, default=27, help="if cbie, number of clusters to create")
     parser.add_argument('--n_pc', type=int, default=12, help="if cbie, number of principal components to discard")
     parser.add_argument('--overwrite', type=bool, default=False,
