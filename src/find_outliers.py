@@ -29,7 +29,7 @@ def main(args):
     if args.type == "all":
         mean_sum_vec = None
         for lang in langs:
-            print(f"Considering language {lang}.")
+            # print(f"Considering language {lang}.")
             if type(lang) is tuple:
                 lang_or_track = lang[0]
                 lang = lang[1]
@@ -124,7 +124,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Establish outlier dimensions.')
     parser.add_argument('--model', type=str, help="name of the model")
     parser.add_argument('--layer', type=int, help="which model layer the embeddings are from")
-    parser.add_argument('--dataset', type=str, default="tatoeba", choices=["tatoeba", "wiki"],
+    parser.add_argument('--dataset', type=str, default="tatoeba", choices=["tatoeba", "wiki", 'sts'],
                         help="use embeddings from this dataset (tatoeba, wiki)")
     parser.add_argument('--append_file_name', type=str, default="", help='to load files à la .._whitened.pt')
     parser.add_argument('--stdevs', type=int, default=3,

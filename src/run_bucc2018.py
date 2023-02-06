@@ -45,12 +45,12 @@ def main(input_args):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_name', type=str)
-    parser.add_argument('--data_dir', type=str)
-    parser.add_argument('--out_dir', type=str)
-    parser.add_argument('--predict_dir', type=str)
+    parser.add_argument('--model_name', type=str, help='model name (HF) or path (local)')
+    parser.add_argument('--data_dir', type=str, help='location of bucc2018 data. should include gold files.')
+    parser.add_argument('--out_dir', type=str, help='where to write processed (e.g. tokenised) files and embeddings')
+    parser.add_argument('--predict_dir', type=str, help='where to save predictions')
     parser.add_argument("--remove_dim", type=int, nargs='*', default=None,
-                        help="dimensions to zero out, i.e. outlier dimension")
+                        help="dimensions to zero out before predicting, i.e. outlier dimensions")
     args = parser.parse_args()
 
     args.tokenizer_name = None
