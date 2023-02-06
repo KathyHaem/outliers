@@ -332,7 +332,7 @@ def bucc_eval(candidates_file, gold_file, src_file, trg_file, src_id_file, trg_i
         return None
 
 
-def similarity_search(x, y, dim, normalize=False):
+def similarity_search(x, y, dim, normalize=False, extract_rankings=False):
     num = x.shape[0]
     idx = faiss.IndexFlatL2(dim)
     if normalize:
@@ -340,8 +340,9 @@ def similarity_search(x, y, dim, normalize=False):
         faiss.normalize_L2(y)
     idx.add(x)
 
-    # Uncomment this and comment part below, if similarity rankings and their cosines should be extracted
-    ##scores, prediction = idx.search(y, 250)
-    ##return prediction, scores
-    scores, prediction = idx.search(y, 1)
+    if extract_rankings:
+        scores, prediction = idx.search(y, 250)
+        return prediction, scores
+    else:
+        scores, prediction = idx.search(y, 1)
     return prediction

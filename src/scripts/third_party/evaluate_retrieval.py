@@ -48,7 +48,6 @@ from scripts.third_party.utils_lareqa import load_data as lareqa_load_data
 from scripts.third_party.utils_lareqa import mean_avg_prec as lareqa_mean_avg_prec
 from scripts.third_party.run_retrieval_qa import BertForSequenceRetrieval
 
-
 logger = logging.getLogger(__name__)
 
 ALL_MODELS = sum(
@@ -650,7 +649,8 @@ def predict_tatoeba(args, src_embs, tgt_embs):
 def extract_rankings(all_src_embeds, all_tgt_embeds, args, src_lang2, tgt_lang2):
     for i in [args.specific_layer]:
         x, y = all_src_embeds[i], all_tgt_embeds[i]
-        predictions, scores = similarity_search(x, y, args.embed_size, normalize=(args.dist == 'cosine'))
+        predictions, scores = similarity_search(x, y, args.embed_size, normalize=(args.dist == 'cosine'),
+                                                extract_rankings=True)
         with open(os.path.join(args.predict_dir + "ids", f'test-{src_lang2}.json'), 'w') as fout:
             preds = json.dumps(predictions.tolist())
             fout.write(preds)
