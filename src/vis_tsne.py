@@ -70,22 +70,45 @@ def load_embs(emb_file, load, do_cbie, do_whiten):
 
 
 def main(args):
+    if not args.plot_file:  # support passing the required attributes instead of a file path directly
+        args.plot_file = \
+            f'../plots/{args.dataset}/{args.model}/{args.layer}/{args.lang_or_track}/tsne{args.append_file_name}.png'
+
+    if not args.emb_file:  # support passing the required attributes instead of a file path directly
+        lang = args.lang_or_track if args.dataset in ['tatoeba', 'wiki'] else 'lng1'
+        args.emb_file = \
+            f'../embs/{args.dataset}/{args.model}/{args.layer}/{args.lang_or_track}/{lang}{args.append_file_name}.pt'
+
+    # load first set of embeddings
     embs = load_embs(args.emb_file, args.load, args.do_cbie, args.do_whiten)
 
-    if args.parallel_emb_file and args.parallel_vis:
+    if args.parallel_vis:
+        if not args.parallel_emb_file:  # support passing the required attributes instead of a file path directly
+            lang = args.lang_or_track if args.dataset in ['tatoeba', 'wiki'] else 'lng2'
+            args.parallel_emb_file = \
+                f'../embs/{args.dataset}/{args.model}/{args.layer}/{args.lang_or_track}/{lang}{args.append_file_name}.pt'
+
+        # load parallel set of embeddings
         parallel_embs = load_embs(args.parallel_emb_file, args.load, args.do_cbie, args.do_whiten)
+
+        # visualise
         vis_tsne_parallel(embs, parallel_embs, args.plot_file,
                           f"t-SNE vis of {args.emb_file} and {args.parallel_emb_file}. "
                           f"Whiten: {args.do_whiten} CBIE: {args.do_cbie}")
 
     else:
-        visualise_tsne(embs, args.plot_file, f"t-SNE vis of {args.emb_file}. "
-                                             f"Whiten: {args.do_whiten} CBIE: {args.do_cbie}")
+        visualise_tsne(embs, args.plot_file, f"t-SNE vis of {args.emb_file}. ")
+                                            # f"Whiten: {args.do_whiten} CBIE: {args.do_cbie}")
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='visualise embeddings from a file with tSNE')
-    # parser.add_argument('--model', type=str, help="name of the model")
+    parser.add_argument('--model', type=str, help="name of the model to be analyzed")
+    parser.add_argument('--layer', type=int, help="which model layer the embeddings are from")
+    parser.add_argument('--dataset', type=str, default="tatoeba", choices=["tatoeba", "wiki", "sts"],
+                        help="use embeddings from this dataset (tatoeba, wiki)")
+    parser.add_argument('--append_file_name', type=str, default="", help='to load files à la .._whitened.pt')
+    parser.add_argument('--lang_or_track', type=str, default="", help='part of the path')
     parser.add_argument('--emb_file', type=str, help="location of the file in question")
     parser.add_argument('--parallel_emb_file', type=str, required=False, help="location of second emb file")
     parser.add_argument('--parallel_vis', action='store_true', help='if two (parallel) langs should be in same plot')
