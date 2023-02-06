@@ -5,11 +5,11 @@ import zipfile
 
 import pandas as pd
 import torch
+import wget
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, AutoModel
-import wget
 
-from constants import langs_tatoeba, langs_wiki, lang_dict_3_2, sts_gold_files
+from constants import langs_tatoeba, langs_wiki, lang_dict_3_2
 from post_processing import whitening, cluster_based
 
 
@@ -93,6 +93,9 @@ def main(args):
         langs = langs_wiki
     elif args.dataset == "sts":
         langs = []
+    elif args.dataset == 'bucc':
+        langs = ['de', 'fr', 'ru', 'zh']
+        raise NotImplementedError
     else:
         raise ValueError("unknown dataset argument")
 
@@ -101,8 +104,11 @@ def main(args):
     if args.dataset == 'tatoeba':
         for lang in langs:
             print(f"Currently processing {lang}...")
-            os.makedirs(f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}', exist_ok=True)
-
+            try:
+                os.makedirs(f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}')
+            except OSError:
+                print(f"embeddings for {lang} already exist, skipping")
+                continue
             if args.tatoeba_use_task_order:
                 tgt, eng = read_tatoeba_data_task(lang)
             else:
@@ -137,8 +143,12 @@ def main(args):
         dfs = [df_ar, df_en, df_es, df_su, df_sw, df_tr]
         for lang, df in zip(langs, dfs):
             print(f"processing {lang}...")
+            try:
+                os.makedirs(f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/')
+            except OSError:
+                print(f"embeddings for {lang} already exist, skipping")
+                continue
             rep = get_embeds(df['Sentence'].tolist(), model, tokenizer, args, device)
-            os.makedirs(f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/', exist_ok=True)
             torch.save(rep, f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/{lang}.pt')
             if args.save_whitened:
                 whitened = torch.Tensor(whitening(rep.numpy()))
@@ -156,24 +166,14 @@ def main(args):
             os.makedirs('../data/sts/')
             wget.download("http://alt.qcri.org/semeval2017/task1/data/uploads/sts2017.eval.v1.1.zip", '../data/STS_text.zip')
             with zipfile.ZipFile('../data/STS_text.zip', 'r') as zip_ref:
-                zip_ref.extractall('../data')
-            os.rename('../data/STS2017.eval.v1.1/STS.input.track2.ar-en.txt', '../data/sts/')
-            os.rename('../data/STS2017.eval.v1.1/STS.input.track4a.es-en.txt', '../data/sts/')
-            os.rename('../data/STS2017.eval.v1.1/STS.input.track4b.es-en.txt', '../data/sts/')
-            os.rename('../data/STS2017.eval.v1.1/STS.input.track6.tr-en.txt', '../data/sts/')
+                zip_ref.extractall('../data/sts')
 
             wget.download("http://alt.qcri.org/semeval2017/task1/data/uploads/sts2017.gs.zip", '../data/STS_gt.zip')
             with zipfile.ZipFile('../data/STS_gt.zip', 'r') as zip_ref:
-                zip_ref.extractall('../data')
-            os.rename('../data/STS2017.gs/STS.gs.track2.ar-en.txt', '../data/sts/')
-            os.rename('../data/STS2017.gs/STS.gs.track4a.es-en.txt', '../data/sts/')
-            os.rename('../data/STS2017.gs/STS.gs.track4b.es-en.txt', '../data/sts/')
-            os.rename('../data/STS2017.gs/STS.gs.track6.tr-en.txt', '../data/sts/')
+                zip_ref.extractall('../data/sts')
 
             os.remove('../data/STS_gt.zip')
             os.remove('../data/STS_text.zip')
-            os.removedirs('../data/STS2017.eval.v1.1/')
-            os.removedirs('../data/STS2017.gs/')
 
         def extract_sts_lng(file, track, sentences, lng_id):
             rep = get_embeds(sentences, model, tokenizer, args, device)
@@ -187,24 +187,27 @@ def main(args):
                     cluster_based(rep.numpy(), n_cluster=n_cluster, n_pc=12, hidden_size=rep.shape[1]))
                 torch.save(cbie, f'../embs/{args.dataset}/{args.model}/{args.layer}/{track}/{lng_id}_cbie.pt')
 
-        def extract_sts(file, track, lng1, lng2):
+        def extract_sts(file, track):
             lng1_sent, lng2_sent = sentences_from_two_cols(f'../data/sts/{file}')
-            os.makedirs(f'../embs/{args.dataset}/{args.model}/{args.layer}/{track}/', exist_ok=True)
+            try:
+                os.makedirs(f'../embs/{args.dataset}/{args.model}/{args.layer}/{track}/')
+            except OSError:
+                print(f"embeddings for {track} already exist, skipping")
+                return
             extract_sts_lng(file, track, lng1_sent, "lng1")
             extract_sts_lng(file, track, lng2_sent, "lng2")
 
-
         print("Extract Track 2 ar-en.")
-        extract_sts('STS.input.track2.ar-en.txt', 'track2-ar-en', 'en', 'ar')
+        extract_sts('STS2017.eval.v1.1/STS.input.track2.ar-en.txt', 'track2-ar-en')
 
         print("Extract Track 4a es-en.")
-        extract_sts('STS.input.track4a.es-en.txt', 'track4a-es-en', 'es', 'en')
+        extract_sts('STS2017.eval.v1.1/STS.input.track4a.es-en.txt', 'track4a-es-en')
 
         print("Extract Track 4b es-en.")
-        extract_sts('STS.input.track4b.es-en.txt', 'track4b-es-en', 'en', 'es')
+        extract_sts('STS2017.eval.v1.1/STS.input.track4b.es-en.txt', 'track4b-es-en')
 
         print("Extract Track 6 tr-en.")
-        extract_sts('STS.input.track6.tr-en.txt', 'track6-tr-en', 'en', 'tr')
+        extract_sts('STS2017.eval.v1.1/STS.input.track6.tr-en.txt', 'track6-tr-en')
 
         print(f"Finished saving STS for model {args.model}.")
 
@@ -214,8 +217,9 @@ if __name__ == "__main__":
     parser.add_argument('--model', type=str, help="name of the model", required=True)
     parser.add_argument('--layer', type=int, help="which model layer to save embeddings are from", required=True)
     parser.add_argument('--device', type=str, default="0", help="which GPU/device to use")
-    parser.add_argument('--dataset', type=str, default="tatoeba", choices=["tatoeba", "wiki", "sts"],
+    parser.add_argument('--dataset', type=str, default="tatoeba", choices=["tatoeba", "wiki", "sts", "bucc"],
                         help="which dataset to encode (tatoeba, wiki)")
+    parser.add_argument('--split', type=str, default='dev', choices=['dev', 'test'], help='so far only for bucc')
     parser.add_argument('--tatoeba_use_task_order', action='store_true', default=False,
                         help='load tatoeba data with non-parallel order so there is sth to predict')
     parser.add_argument('--batch_size', type=int, default=128, help='batch size for encoding')

@@ -26,8 +26,8 @@ sts_tracks = [
     'track2-ar-en', 'track4a-es-en', 'track4b-es-en', 'track6-tr-en']
 
 sts_gold_files = {
-    'track2-ar-en':  '../data/sts/STS.gs.track2.ar-en.txt',
-    'track4a-es-en': '../data/sts/STS.gs.track4a.es-en.txt',
-    'track4b-es-en': '../data/sts/STS.gs.track4b.es-en.txt',
-    'track6-tr-en':  '../data/sts/STS.gs.track6.tr-en.txt'
+    'track2-ar-en':  '../data/sts/STS2017.gs/STS.gs.track2.ar-en.txt',
+    'track4a-es-en': '../data/sts/STS2017.gs/STS.gs.track4a.es-en.txt',
+    'track4b-es-en': '../data/sts/STS2017.gs/STS.gs.track4b.es-en.txt',
+    'track6-tr-en':  '../data/sts/STS2017.gs/STS.gs.track6.tr-en.txt'
 }
