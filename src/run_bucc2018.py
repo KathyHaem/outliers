@@ -51,6 +51,7 @@ if __name__ == "__main__":
     parser.add_argument('--predict_dir', type=str, help='where to save predictions')
     parser.add_argument("--remove_dim", type=int, nargs='*', default=None,
                         help="dimensions to zero out before predicting, i.e. outlier dimensions")
+    parser.add_argument('--dim', type=int, default=768)
     args = parser.parse_args()
 
     args.tokenizer_name = None
@@ -59,6 +60,4 @@ if __name__ == "__main__":
     if "xlm-roberta" in args.model_name or "xlmr" in args.model_name:
         args.model_type = "xlmr"
         args.tokenizer_name = "xlm-roberta-base"
-    if "base" in args.model_name:
-        args.dim = 768
     main(args)

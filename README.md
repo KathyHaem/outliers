@@ -26,8 +26,45 @@ Similarly, extracting sentence embeddings, outlier and anisotropy analysis, and 
 
 ## For Figure 1
 
+1. (Using other options as needed,) run Tatoeba with the ``--extract_rankings`` flag:
 
+```bash
+./src$ python3 run_tatoeba.py --extract_rankings
+./src$ mv ../predictions/xlm-roberta-base/tatoeba/ ../predictions/xlm-roberta-base-original-predictions/tatoeba/
+```
 
+2. Do the same with dimension(s) of interest removed:
+
+```bash
+./src$ python3 run_tatoeba.py --extract_rankings --remove_dim 588
+./src$ mv ../predictions/xlm-roberta-base/tatoeba/ ../predictions/xlm-roberta-base-588-predictions/tatoeba/
+```
+
+3. Run `spearman_and_cosines.py`:
+
+```bash
+./src$ python3 spearman_and_cosines.py --model xlm-roberta-base --dimension 588 --job cosines
+```
+
+## For Figures 2 and 4:
+
+1. Extract Tateoba sentence embeddings using ``extract_sent_embeddings.py``.
+2. Run ``plots.py``:
+
+```bash
+./src$ python3 plots.py --model xlm-roberta-base --layer 7 --dataset tatoeba --job means
+```
+
+## For Figure 3:
+
+1. Extract (Tateoba) sentence embeddings using ``extract_sent_embeddings.py``.
+2. Run ``vis_tsne.py``, in the required variations:
+
+```bash
+./src$ python3 vis_tsne.py --model xlm-roberta-base --layer 7 --dataset tatoeba --lang_or_track ara --parallel_vis
+./src$ python3 vis_tsne.py --model xlm-roberta-base --layer 7 --dataset tatoeba --lang_or_track ara --parallel_vis --append_file_name _whitened
+...
+```
 
 # Obtaining the Datasets Used
 

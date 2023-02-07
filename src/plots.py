@@ -92,30 +92,50 @@ def mean_english(args, langs, hidden_size=768):
         else:
             mean_sum_vec = torch.add(mean_sum_vec, torch.mean(eng_emb, axis=0))
 
-    mean_vec = torch.divide(mean_sum_vec, len(langs))
-    mean = torch.mean(mean_vec)
-    std_dev = torch.std(mean_vec)
+    mean_vector = torch.divide(mean_sum_vec, len(langs))
+    mean = torch.mean(mean_vector)
+    std_dev = torch.std(mean_vector)
     x = np.arange(hidden_size)
     clrs = sns.color_palette("pastel", 8)
 
     counter = 0
     outliers = []
-    for i in mean_vec:
+    for i in mean_vector:
         if abs(i) > mean + 3 * std_dev:
             outliers.append(counter)
         counter += 1
 
     print(f"Outlier dimensions: {outliers}")
     for o in outliers:
-        print(f"Average value of {o}: {mean_vec[o]}")
+        print(f"Average value of {o}: {mean_vector[o]}")
 
     plt.figure(figsize=(6, 1.5))
     plt.xlim([0, hidden_size])
-    plt.plot(mean_vec)
+    plt.plot(mean_vector)
     plt.fill_between(x, mean - std_dev * args.stdevs, mean + std_dev * args.stdevs, alpha=0.5, facecolor=clrs[7])
     plt.title(f"average english embedding")
     plt.xlabel("dim")
     plt.savefig(f'{fig_dir}/avg_eng_embedding{args.append_file_name}.png', dpi=300, bbox_inches="tight")
+
+
+def mean_all(args, tgt_embs, hidden_size=768):
+    all_mean = torch.stack([emb.mean(axis=0) for emb in tgt_embs]).mean(axis=0)
+
+    fig_dir = f'../plots/{args.dataset}/{args.model}/{args.layer}/'
+    os.makedirs(os.path.dirname(fig_dir), exist_ok=True)
+
+    mean = torch.mean(all_mean)
+    std_dev = torch.std(all_mean)
+    x = np.arange(hidden_size)
+    clrs = sns.color_palette("pastel", 8)
+
+    plt.figure(figsize=(6, 1.5))
+    plt.xlim([0, hidden_size])
+    plt.plot(all_mean)
+    plt.fill_between(x, mean - std_dev * args.stdevs, mean + std_dev * args.stdevs, alpha=0.5, facecolor=clrs[7])
+    plt.title(f"Layer {args.layer} mean embedding")
+    plt.xlabel("dim")
+    plt.savefig(f'{fig_dir}/all_mean_embedding{args.append_file_name}.png', dpi=300, bbox_inches="tight")
 
 
 # plot sentence level outliers (single values in an outlier dimension)
@@ -164,13 +184,19 @@ def main(args):
 
     elif args.job == "means":
         print("Generating mean representations.")
+        tgt_embs = []
+        eng_embs = []
         for lang in langs:
             # print(f"Current language: {lang}")
             target_emb = torch.load(
                 f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/{lang}{args.append_file_name}.pt')
             eng_emb = None if args.dataset == "wiki" else torch.load(
                 f'../embs/{args.dataset}/{args.model}/{args.layer}/{lang}/eng{args.append_file_name}.pt')
+            tgt_embs.append(target_emb)
+            eng_embs.append(eng_emb)
             mean_vec(args, target_emb, eng_emb, lang)
+        tgt_embs.extend(eng_embs)
+        mean_all(args, tgt_embs)
 
     elif args.job == "outlier":
         print("Generating outlier visualization.")

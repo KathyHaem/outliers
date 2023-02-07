@@ -9,9 +9,9 @@ import matplotlib.pyplot as plt
 from constants import langs_tatoeba_2
 
 parser = argparse.ArgumentParser(description='Analyze prediction rankings and cosines.')
-parser.add_argument('model', type=str, help="name of the model to be analyzed (xlm-r, cca or mse)")
-parser.add_argument('dimension', type=int, help='dimension to analyze, e.g. 588')
-parser.add_argument('job', help="'spearman' or 'cosines")
+parser.add_argument('--model', type=str, help="name of the model to be analyzed")
+parser.add_argument('--dimension', type=int, help='dimension to analyze, e.g. 588')
+parser.add_argument('--job', help="'spearman' or 'cosines")
 args = parser.parse_args()
 
 langs = langs_tatoeba_2

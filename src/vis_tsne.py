@@ -109,11 +109,14 @@ if __name__ == "__main__":
                         help="use embeddings from this dataset (tatoeba, wiki)")
     parser.add_argument('--append_file_name', type=str, default="", help='to load files à la .._whitened.pt')
     parser.add_argument('--lang_or_track', type=str, default="", help='part of the path')
+
+    # fill out either the info above or these three file names directly
     parser.add_argument('--emb_file', type=str, help="location of the file in question")
     parser.add_argument('--parallel_emb_file', type=str, required=False, help="location of second emb file")
-    parser.add_argument('--parallel_vis', action='store_true', help='if two (parallel) langs should be in same plot')
     parser.add_argument('--plot_file', type=str, help="where to save the plot")
-    parser.add_argument('--load', type=str, choices=["torch", "np"], help="library to use for loading [torch, np]")
+
+    parser.add_argument('--parallel_vis', action='store_true', help='if two (parallel) langs should be in same plot')
+    parser.add_argument('--load', type=str, default='torch', choices=["torch", "np"], help="library to use for loading [torch, np]")
     parser.add_argument('--do_cbie', action='store_true', help='try doing cbie before')
     parser.add_argument('--do_whiten', action='store_true', help='try doing whitening before')
     args = parser.parse_args()

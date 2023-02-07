@@ -134,13 +134,13 @@ def prepare_batch(sentences, tokenizer, model_type, device="cuda", max_length=51
 
 def tokenize_text(text_file, tok_file, tokenizer, lang=None):
     if os.path.exists(tok_file):
-        tok_sentences = [l.strip().split(' ') for l in open(tok_file)]
+        tok_sentences = [l.strip().split(' ') for l in open(tok_file, 'r', encoding='utf-8')]
         logger.info(' -- loading from existing tok_file {}'.format(tok_file))
         return tok_sentences
 
     tok_sentences = []
-    sents = [l.strip() for l in open(text_file)]
-    with open(tok_file, 'w') as writer:
+    sents = [l.strip() for l in open(text_file, 'r', encoding='utf-8')]
+    with open(tok_file,  'w', encoding='utf-8') as writer:
         for sent in tqdm(sents, desc='tokenize'):
             if isinstance(tokenizer, XLMTokenizer):
                 tok_sent = tokenizer.tokenize(sent, lang=lang)
@@ -640,7 +640,7 @@ def eval_tatoeba(args):
 def predict_tatoeba(args, src_embs, tgt_embs):
     predictions = similarity_search(src_embs, tgt_embs, args.embed_size, normalize=(args.dist == 'cosine'))
     os.makedirs(os.path.dirname(args.predict_dir), exist_ok=True)
-    with open(os.path.join(args.predict_dir, f'test-{args.src_language}.tsv'), 'w') as fout:
+    with open(os.path.join(args.predict_dir, f'test-{args.src_language}.tsv'), 'w', encoding='utf-8') as fout:
         for p in predictions:
             fout.write(str(p) + '\n')
     # print(f"finished writing predictions for {args.src_language}-{args.tgt_language}")
@@ -651,11 +651,13 @@ def extract_rankings(all_src_embeds, all_tgt_embeds, args, src_lang2, tgt_lang2)
         x, y = all_src_embeds[i], all_tgt_embeds[i]
         predictions, scores = similarity_search(x, y, args.embed_size, normalize=(args.dist == 'cosine'),
                                                 extract_rankings=True)
-        with open(os.path.join(args.predict_dir + "ids", f'test-{src_lang2}.json'), 'w') as fout:
+        os.makedirs(os.path.join(args.predict_dir, "ids"), exist_ok=True)
+        with open(os.path.join(args.predict_dir + "ids", f'test-{src_lang2}.json'), 'w', encoding='utf-8') as fout:
             preds = json.dumps(predictions.tolist())
             fout.write(preds)
-
-        with open(os.path.join(args.predict_dir + "cosines", f'test-cosines-{src_lang2}.json'), 'w') as wout:
+        os.makedirs(os.path.join(args.predict_dir, "cosines"), exist_ok=True)
+        with open(os.path.join(args.predict_dir + "cosines", f'test-cosines-{src_lang2}.json'), 'w',
+                  encoding='utf-8') as wout:
             scrs = json.dumps(scores.tolist())
             wout.write(scrs)
         print(f"finished writing predictions for {src_lang2}-{tgt_lang2}")
