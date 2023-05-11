@@ -16,8 +16,9 @@ from scripts.third_party.evaluate_retrieval import predict_tatoeba
 
 
 def main():
-    models = ["xlm-roberta-base", "bert-base-multilingual-cased",
-              "sentence-transformers/xlm-r-100langs-bert-base-nli-stsb-mean-tokens",
+    models = ["bert-base-multilingual-uncased"
+              # "xlm-roberta-base", "bert-base-multilingual-cased",
+              # "sentence-transformers/xlm-r-100langs-bert-base-nli-stsb-mean-tokens",
               # "../models/xlmr_nliv2_5-langs",
               # "sentence-transformers/LaBSE",
               # "../models/xlmr_across_time/5k"  # requires getting the model conversion to work ://
@@ -30,13 +31,13 @@ def main():
     for model in models:
         args = argparse.Namespace(model=model, layer=7, device='0', dataset='tatoeba', tatoeba_use_task_order=True,
                                   batch_size=64, save_whitened=True, save_cbie=True)
-        extract_analyse(args)
+        # extract_analyse(args)
 
         # checking tatoeba performances
         args = argparse.Namespace(dist='cosine', layer=7, embed_size=768, tgt_language='en')
-        tatoeba(args, 'unmod', model)
-        tatoeba(args, 'cbie', model)
-        tatoeba(args, 'whitened', model)
+        # tatoeba(args, 'unmod', model)
+        # tatoeba(args, 'cbie', model)
+        # tatoeba(args, 'whitened', model)
 
         # doing similar things for wiki dataset
         args = argparse.Namespace(model=model, layer=11, device='0', dataset='wiki', batch_size=64,

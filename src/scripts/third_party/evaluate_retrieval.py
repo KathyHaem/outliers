@@ -152,7 +152,7 @@ def tokenize_text(text_file, tok_file, tokenizer, lang=None):
 
     logger.info('============ First 5 tokenized sentences ===============')
     for i, tok_sentence in enumerate(tok_sentences[:5]):
-        logger.info('S{}: {}'.format(i, ' '.join(tok_sentence)))
+        logger.info(f"S{i}: {''.join(tok_sentence)}")
     logger.info('==================================')
     return tok_sentences
 
@@ -631,10 +631,9 @@ def eval_tatoeba(args):
         all_src_embeds, all_tgt_embeds = zero_dims(all_src_embeds, all_tgt_embeds, args.remove_dim)
     if args.extract_rankings:
         extract_rankings(all_src_embeds, all_tgt_embeds, args, src_lang2, tgt_lang2)
-    else:
-        for i in [args.specific_layer]:
-            x, y = all_src_embeds[i], all_tgt_embeds[i]
-            predict_tatoeba(args, x, y)
+    for i in [args.specific_layer]:
+        x, y = all_src_embeds[i], all_tgt_embeds[i]
+        predict_tatoeba(args, x, y)
 
 
 def predict_tatoeba(args, src_embs, tgt_embs):
@@ -656,8 +655,8 @@ def extract_rankings(all_src_embeds, all_tgt_embeds, args, src_lang2, tgt_lang2)
             preds = json.dumps(predictions.tolist())
             fout.write(preds)
         os.makedirs(os.path.join(args.predict_dir, "cosines"), exist_ok=True)
-        with open(os.path.join(args.predict_dir + "cosines", f'test-cosines-{src_lang2}.json'), 'w',
-                  encoding='utf-8') as wout:
+        json_filename = os.path.join(args.predict_dir + "cosines", f'test-cosines-{src_lang2}.json')
+        with open(json_filename, 'w', encoding='utf-8') as wout:
             scrs = json.dumps(scores.tolist())
             wout.write(scrs)
         print(f"finished writing predictions for {src_lang2}-{tgt_lang2}")

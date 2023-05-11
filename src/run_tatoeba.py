@@ -45,7 +45,7 @@ if __name__ == "__main__":
     parser.add_argument("--remove_dim", type=int, nargs='*', default=None,
                         help="dimensions to zero out before predicting, i.e. outlier dimensions")
     parser.add_argument('--extract_rankings', default=False, action='store_true', help='flag needed for figure 1')
-    parser.add_argument('--dim', type=int, default=768)
+    parser.add_argument('--dim', type=int, default=768, help='hidden size')
     args = parser.parse_args()
 
     args.tokenizer_name = None

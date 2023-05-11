@@ -9,6 +9,7 @@ import pandas as pd
 import torch
 import wget
 from torch.utils.data import DataLoader
+from tqdm import tqdm
 from transformers import AutoTokenizer, AutoModel
 
 from constants import langs_tatoeba, langs_wiki, lang_dict_3_2
@@ -48,7 +49,7 @@ def get_embeds(data, model, tokenizer, args, device):
     dataloader = DataLoader(data, batch_size=args.batch_size, drop_last=False)
     max_len = max([len(x) for x in tokenizer(data, padding=True, truncation=True)['input_ids']])
 
-    for batch in dataloader:
+    for batch in tqdm(dataloader):
         encoded = tokenizer(batch, max_length=max_len, padding='max_length', truncation=True, return_tensors='pt')
         encoded.to(device)
         if attention_masks is None:
