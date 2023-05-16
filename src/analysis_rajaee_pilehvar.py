@@ -98,12 +98,23 @@ def extract_reps_per_lang(model, tokenizer, df, lang, args):
     np.save(file_name, selected)
 
 
+def get_outliers(selected, stdevs):
+    mean_vec = torch.mean(selected, axis=0)
+    mean = torch.mean(mean_vec)
+    std_dev = torch.std(mean_vec)
+    outliers = []
+    for counter, i in enumerate(mean_vec):
+        if abs(i) > mean + stdevs * std_dev:
+            outliers.append(counter)
+
+
 def get_contributions(langs: List[str], base_dir, model_name):
     model_contribution = []
     for lang in langs:
         selected = np.load(f'{base_dir}/{model_name}/selected_{lang}.npy', allow_pickle=True)
         model_contribution.append(cosine_contribution(selected, 3))
-        print(isotropy(selected))
+        print(f'{lang} isotropy score: {isotropy(selected)}')
+        print(f'{lang} outlier dims: {get_outliers(selected)}')
     model_contribution = np.asarray(model_contribution)
 
     t_file = open(f'{model_name}-contribution.txt', "w")

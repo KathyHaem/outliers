@@ -195,7 +195,8 @@ def main(args):
             tgt_embs.append(target_emb)
             eng_embs.append(eng_emb)
             mean_vec(args, target_emb, eng_emb, lang)
-        tgt_embs.extend(eng_embs)
+        if eng_embs[0] is not None:
+            tgt_embs.extend(eng_embs)
         mean_all(args, tgt_embs)
 
     elif args.job == "outlier":
