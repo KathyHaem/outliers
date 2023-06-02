@@ -1,4 +1,4 @@
-This is the repository for our paper "Exploring anisotropy and outliers in multilingual language models for cross-lingual semantic sentence similarity".
+This is the repository for our paper [Exploring Anisotropy and Outliers in Multilingual Language Models for Cross-Lingual Semantic Sentence Similarity](https://arxiv.org/abs/2306.00458).
 You can use the code to reproduce our results, or adapt it for further experiments.
 
 # Installation
