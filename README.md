@@ -98,6 +98,7 @@ We state where we have adapted code from other repositories in the relevant plac
 
 # Citation
 
+```
 @article{haemmerl-2023-exploring,
       title={Exploring Anisotropy and Outliers in Multilingual Language Models for Cross-Lingual Semantic Sentence Similarity}, 
       author={Katharina H\"ammerl and Alina Fastowski and Jind\v{r}ich Libovick\'y and Alexander Fraser},
@@ -108,3 +109,4 @@ We state where we have adapted code from other repositories in the relevant plac
       journal={CoRR},
       url={https://arxiv.org/abs/2306.00458}
 }
+```
